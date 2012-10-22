@@ -6,25 +6,30 @@ class Helper {
 		assert(key != null);
 		assert(size > 0);
 		
-		int a = 31415; int b = 27183; int h = 0;
+		long a = 31415, b = 27183, h = 0;
 		for (int i=0; i<key.length; i++) {
 			h = (a * h + key[i]) % size;
 			a = a * b % (size - 1);
-		}		
-		h = ((h & Integer.MAX_VALUE) | 1) % size;		
-		return h;
+		}
+		
+		assert(h >= 0);		
+		return (int)h;
 	}
 	
 	
-	public static boolean compare(byte[] a, byte[] b) {
+	public static int compare(byte[] a, byte[] b) {
 		assert(a != null);
 		assert(b != null);
 		
-		if (a.length != b.length) return false;
-		for(int i=0;i<a.length;i++) {
-			if (a[i] != b[i]) return false;
+		if (a.length > b.length) return 1;
+		if (a.length < b.length) return -1;
+		
+		for(int i=0; i<a.length; i++) {			
+			if (a[i] > b[i]) return  1;
+			if (a[i] < b[i]) return  -1;			
 		}
-		return true;
+		
+		return 0;
 	}	
 	
 	

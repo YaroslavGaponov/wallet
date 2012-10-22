@@ -40,8 +40,7 @@ public class SimpleTest {
 				}
 			}		
 		show("done");
-		
-		
+			
 		
 		show("searching ...");		
 			w = new WalletStorage(args[0]);

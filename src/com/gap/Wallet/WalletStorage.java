@@ -134,7 +134,7 @@ public class WalletStorage implements IWalletStorage {
 		long offset = bucket.get(index);
 		while (offset != IStorage.EOF) {
 			byte[] findKey = storage.getKey(offset);
-			if (Helper.compare(key, findKey)) {
+			if (Helper.compare(key, findKey) == 0) {
 				return storage.getValue(offset);
 			}
 			offset = storage.getNextOffset(offset);
@@ -164,7 +164,7 @@ public class WalletStorage implements IWalletStorage {
 		long pred = IStorage.EOF;
 		while (offset != IStorage.EOF) {
 			byte[] akey = storage.getKey(offset);
-			if (Helper.compare(key, akey)) {
+			if (Helper.compare(key, akey) == 0) {
 				if (pred == IStorage.EOF) {
 					bucket.set(index, storage.getNextOffset(offset));
 				} else {
