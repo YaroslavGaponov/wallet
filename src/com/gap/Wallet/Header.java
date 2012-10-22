@@ -44,7 +44,7 @@ class Header implements IHeader {
 	}
 
 	
-	public void countInc() {
+	public void countInc() {		
 		setCount(getCount() + 1);
 	}
 	

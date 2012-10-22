@@ -16,20 +16,21 @@ class Helper {
 		return (int)h;
 	}
 	
+	public enum force { less, equal, more };
 	
-	public static int compare(byte[] a, byte[] b) {
+	public static force compare(byte[] a, byte[] b) {
 		assert(a != null);
 		assert(b != null);
 		
-		if (a.length > b.length) return 1;
-		if (a.length < b.length) return -1;
+		if (a.length > b.length) return force.more;
+		if (a.length < b.length) return force.less;
 		
 		for(int i=0; i<a.length; i++) {			
-			if (a[i] > b[i]) return  1;
-			if (a[i] < b[i]) return  -1;			
+			if (a[i] > b[i]) return  force.more;
+			if (a[i] < b[i]) return  force.less;			
 		}
 		
-		return 0;
+		return force.equal;
 	}	
 	
 	

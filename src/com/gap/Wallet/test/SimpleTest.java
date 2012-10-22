@@ -19,6 +19,7 @@ public class SimpleTest {
 			System.out.println("test filename rows");
 			return;
 		}
+
 		
 		show("creating ...");
 			WalletStorage.createStorage(args[0], Integer.parseInt(args[1]));
@@ -47,10 +48,10 @@ public class SimpleTest {
 			long ss = Integer.parseInt(args[1]) - 1;
 			while (ss != 0) {
 				byte[] bytesKey  = String.format(key, ss).getBytes();
-				long start = System.currentTimeMillis();
+				long start = System.nanoTime();
 				byte[] bytesValue = w.get(bytesKey);				
-				long stop = System.currentTimeMillis();
-				show(new String(bytesKey) + " : " + (bytesValue != null ? new String(bytesValue) : "error") + " -> " + (stop - start) + " ms");
+				long stop = System.nanoTime();
+				show(new String(bytesKey) + " : " + (bytesValue != null ? new String(bytesValue) : "error") + " -> " + (stop - start)/1000 + " µs");
 				ss >>=1;			
 			}
 			w.close();
@@ -62,10 +63,10 @@ public class SimpleTest {
 			long rr = Integer.parseInt(args[1]) - 1;
 			while (rr != 0) {
 				byte[] bytesKey  = String.format(key, rr).getBytes();
-				long start = System.currentTimeMillis();
+				long start = System.nanoTime();
 				boolean result = w.remove(bytesKey);				
-				long stop = System.currentTimeMillis();
-				show(new String(bytesKey) + " : " + (result ? "removed" : "error") + " -> " + (stop - start) + " ms");
+				long stop = System.nanoTime();
+				show(new String(bytesKey) + " : " + (result ? "removed" : "error") + " -> " + (stop - start)/1000 + " µs");
 				rr >>=1;			
 			}
 			w.close();
@@ -78,10 +79,10 @@ public class SimpleTest {
 			while (ii != 0) {
 				byte[] bytesKey  = String.format(key, ii).getBytes();
 				byte[] bytesValue = String.format(value, ii).getBytes();
-				long start = System.currentTimeMillis();
+				long start = System.nanoTime();
 				boolean result = w.set(bytesKey, bytesValue);				
-				long stop = System.currentTimeMillis();
-				show(new String(bytesKey) + " : " + (result ? "inserted" : "error") + " -> " + (stop - start) + " ms");
+				long stop = System.nanoTime();
+				show(new String(bytesKey) + " : " + (result ? "inserted" : "error") + " -> " + (stop - start)/1000 + " µs");
 				ii >>=1;			
 			}
 			show("count = " + w.count());

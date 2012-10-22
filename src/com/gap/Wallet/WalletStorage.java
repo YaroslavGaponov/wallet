@@ -1,4 +1,5 @@
 package com.gap.Wallet;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -20,29 +21,25 @@ public class WalletStorage implements IWalletStorage {
 	private final int bucketSize;
 
 	public WalletStorage(String filename) throws WalletException {
-		assert(filename != null);
-		
+		assert (filename != null);
+
 		Path path = Paths.get(filename);
 
-		if (! path.toFile().exists()) {
+		if (!path.toFile().exists()) {
 			throw new WalletException("database file is not found.");
 		}
 
 		try {
 			// get channel for database file
-			channel = FileChannel.open
-			(
-				path, 
-				StandardOpenOption.READ,
-				StandardOpenOption.WRITE
-			);
+			channel = FileChannel.open(path, StandardOpenOption.READ,
+					StandardOpenOption.WRITE);
 
-			// mapping header and bucket  structures
+			// mapping header and bucket structures
 			header = new Header(channel);
 			bucketSize = header.getBucketSize();
 			bucket = new Bucket(channel, IHeader.header_offset_stop, bucketSize);
-			
-			// initialize data storage 
+
+			// initialize data storage
 			storage = new Storage(channel);
 
 		} catch (IOException e) {
@@ -63,14 +60,13 @@ public class WalletStorage implements IWalletStorage {
 
 	public static void createStorage(String filename, long records)
 			throws IOException, WalletException {
-		
-		assert(filename != null);
-		assert(records >= 0);
-		
+
+		assert (filename != null);
+		assert (records >= 0);
+
 		// create database file
 		FileChannel channel = FileChannel.open(Paths.get(filename),
-				StandardOpenOption.WRITE, 
-				StandardOpenOption.READ,
+				StandardOpenOption.WRITE, StandardOpenOption.READ,
 				StandardOpenOption.CREATE);
 
 		// calculate a bucket size base on planning count of records
@@ -83,8 +79,9 @@ public class WalletStorage implements IWalletStorage {
 		header.setVersion(version);
 		header.setCount(0L);
 
-		//  initialize bucket table
-		Bucket bucket = new Bucket(channel, IHeader.header_offset_start + IHeader.header_size, bucketSize);
+		// initialize bucket table
+		Bucket bucket = new Bucket(channel, IHeader.header_offset_start
+				+ IHeader.header_size, bucketSize);
 		for (int i = 0; i < bucketSize; i++) {
 			bucket.set(i, IStorage.EOF);
 		}
@@ -93,21 +90,23 @@ public class WalletStorage implements IWalletStorage {
 		channel.close();
 	}
 
-	public static void rebuild(String filename) throws WalletException, IOException {
-		assert(filename != null);
-		
-		// generate temp filename		
-		String tmpfilename = File.createTempFile("wallet", ".tmp").getAbsolutePath();
-		
+	public static void rebuild(String filename) throws WalletException,
+			IOException {
+		assert (filename != null);
+
+		// generate temp. filename
+		String tmpfilename = File.createTempFile("wallet", ".tmp")
+				.getAbsolutePath();
+
 		// open database filename
 		WalletStorage src = new WalletStorage(filename);
-		
-		// create and open temp filename
+
+		// create and open temp. filename
 		WalletStorage.createStorage(tmpfilename, src.count());
 		WalletStorage tmp = new WalletStorage(tmpfilename);
-		
+
 		// copy
-		for (int i=0; i<src.bucketSize; i++) {
+		for (int i = 0; i < src.bucketSize; i++) {
 			long offset = src.bucket.get(i);
 			while (offset != IStorage.EOF) {
 				byte[] key = src.storage.getKey(offset);
@@ -116,65 +115,121 @@ public class WalletStorage implements IWalletStorage {
 				offset = src.storage.getNextOffset(offset);
 			}
 		}
-				
+
 		// close
 		tmp.close();
 		src.close();
-				
+
 		// rename
 		Paths.get(filename).toFile().delete();
 		Paths.get(tmpfilename).toFile().renameTo(Paths.get(filename).toFile());
 	}
-	
-	public byte[] get(byte[] key) throws IOException {
-		assert(key != null);
-		assert(key.length > 0);
-		
+
+	@SuppressWarnings("incomplete-switch")
+	public boolean exists(byte[] key) throws IOException {
+		assert (key != null);
+		assert (key.length > 0);
+
 		int index = Helper.hashCode(key, bucketSize);
-		long offset = bucket.get(index);
-		while (offset != IStorage.EOF) {
-			byte[] findKey = storage.getKey(offset);
-			if (Helper.compare(key, findKey) == 0) {
-				return storage.getValue(offset);
+		assert(index >= 0);
+		assert(index < bucketSize);
+
+		long current = bucket.get(index);
+		while (current != IStorage.EOF) {
+			byte[] findKey = storage.getKey(current);
+			switch (Helper.compare(key, findKey)) {
+			case equal:
+				return true;				
+			case more:
+				return false;
 			}
-			offset = storage.getNextOffset(offset);
+			current = storage.getNextOffset(current);
+		}
+		return false;
+	}
+
+	@SuppressWarnings("incomplete-switch")
+	public byte[] get(byte[] key) throws IOException {
+		assert (key != null);
+		assert (key.length > 0);
+
+		int index = Helper.hashCode(key, bucketSize);
+		assert(index >= 0);
+		assert(index < bucketSize);
+
+		long current = bucket.get(index);
+		while (current != IStorage.EOF) {
+			byte[] findKey = storage.getKey(current);
+			switch (Helper.compare(key, findKey)) {
+				case equal:
+					return storage.getValue(current);					
+				case more:
+					return null;
+			}
+			current = storage.getNextOffset(current);
 		}
 		return null;
 	}
 
+	@SuppressWarnings("incomplete-switch")
 	public boolean set(byte[] key, byte[] value) throws IOException {
-		assert(key != null);
-		assert(key.length > 0);
-		
+		assert (key != null);
+		assert (key.length > 0);
+
 		int index = Helper.hashCode(key, bucketSize);
-		long offset = bucket.get(index);
-		offset = storage.save(key, value, offset);
-		bucket.set(index, offset);
-		header.countInc();
+		assert(index >= 0);
+		assert(index < bucketSize);
 		
+		long current = bucket.get(index);
+		long previous = IStorage.EOF;
+		while (current != IStorage.EOF) {
+			byte[] findKey = storage.getKey(current);
+			switch (Helper.compare(key, findKey)) {
+				case equal:
+					current = storage.getNextOffset(current);
+					current = storage.save(key, value, current);
+					saveLink(index, current, previous);
+					return true;					
+				case more:
+					current = storage.save(key, value, current);
+					saveLink(index, current, previous);
+					header.countInc();
+					return true;
+			}
+			previous = current;
+			current = storage.getNextOffset(current);
+		}
+
+		current = storage.save(key, value, IStorage.EOF);
+		saveLink(index, current, previous);
+		header.countInc();
 		return true;
 	}
 
+	@SuppressWarnings("incomplete-switch")
 	public boolean remove(byte[] key) throws IOException {
-		assert(key != null);
-		assert(key.length > 0);
-		
+		assert (key != null);
+		assert (key.length > 0);
+
 		int index = Helper.hashCode(key, bucketSize);
-		long offset = bucket.get(index);
-		long pred = IStorage.EOF;
-		while (offset != IStorage.EOF) {
-			byte[] akey = storage.getKey(offset);
-			if (Helper.compare(key, akey) == 0) {
-				if (pred == IStorage.EOF) {
-					bucket.set(index, storage.getNextOffset(offset));
-				} else {
-					storage.setNextOffset(pred, storage.getNextOffset(offset));
-				}
-				header.countDec();
-				return true;
+		assert(index >= 0);
+		assert(index < bucketSize);
+				
+		long current = bucket.get(index);
+		long previous = IStorage.EOF;
+		while (current != IStorage.EOF) {
+			byte[] findKey = storage.getKey(current);
+			switch (Helper.compare(key, findKey)) {
+				case equal:
+					current = storage.getNextOffset(current);
+					saveLink(index, current, previous);
+					header.countDec();
+					return true;
+				case more:
+					return false;
 			}
-			pred = offset;
-			offset = storage.getNextOffset(offset);
+			previous = current;
+			current = storage.getNextOffset(current);
 		}
 		return false;
 	}
@@ -182,24 +237,33 @@ public class WalletStorage implements IWalletStorage {
 	public long count() {
 		return header.getCount();
 	}
-	
+
 	public long iterator(IterationAction iterationAction) throws IOException {
 		long recs = 0;
-		for (int i=0; i<bucketSize; i++) {
+		for (int i = 0; i < bucketSize; i++) {
 			long offset = bucket.get(i);
 			while (offset != IStorage.EOF) {
 				recs++;
 				byte[] key = storage.getKey(offset);
 				byte[] value = storage.getValue(offset);
 				boolean resume = iterationAction.fire(key, value);
-				if (! resume) { 
-					return recs;		
+				if (!resume) {
+					return recs;
 				}
 				offset = storage.getNextOffset(offset);
 			}
 		}
-		return recs;		
+		return recs;
 	}
 
+	private void saveLink(int index, long current, long previous) throws IOException {
+		assert(index >= 0); assert(index <= bucketSize);
+		
+		if (previous == IStorage.EOF) {
+			bucket.set(index, current);
+		} else {
+			storage.setNextOffset(previous, current);
+		}
+	}
 
 }
