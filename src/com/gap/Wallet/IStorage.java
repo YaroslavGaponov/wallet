@@ -1,5 +1,4 @@
 package com.gap.Wallet;
-import java.io.IOException;
 
 
 interface IStorage {
@@ -12,11 +11,10 @@ interface IStorage {
 	public final int offsetNext_index = 2;
 
 
-	public byte[] getKey(long offset) throws IOException;
-	public byte[] getValue(long offset) throws IOException;
-	public long getNextOffset(long offset) throws IOException;
+	public byte[] getKey(long offset) throws WalletException;
+	public byte[] getValue(long offset) throws WalletException;
+	public long getNextOffset(long offset) throws WalletException;	
+	public void setNextOffset(long offset, long nextOffset) throws WalletException;
 	
-	public void setNextOffset(long offset, long nextOffset) throws IOException;
-	
-	public long save(byte[] key, byte[] value, long nextOffset) throws IOException;	
+	public long save(byte[] key, byte[] value, long nextOffset) throws WalletException;	
 }

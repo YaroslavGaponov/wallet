@@ -32,6 +32,7 @@ class Header implements IHeader {
 	}
 
 	public void setCount(long count) {
+		assert(count >= 0);		
 		header.put(index_count, count);
 	}
 
@@ -40,6 +41,7 @@ class Header implements IHeader {
 	}
 
 	public void setBucketSize(int bucketSize) {
+		assert(bucketSize > 0);		
 		header.put(index_bucketSize, bucketSize);
 	}
 

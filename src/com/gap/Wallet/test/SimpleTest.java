@@ -13,7 +13,7 @@ public class SimpleTest {
 		System.out.println(new Date() + " " + message);
 	}
 	
-	public static void main(String[] args) throws WalletException, IOException {
+	public static void main(String[] args) throws WalletException, NumberFormatException, IOException {
 				
 		if (args.length != 2) {
 			System.out.println("test filename rows");

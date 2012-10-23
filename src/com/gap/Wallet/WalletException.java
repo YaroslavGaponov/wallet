@@ -1,15 +1,22 @@
 package com.gap.Wallet;
 
-public class WalletException extends Exception {
-	private static final long serialVersionUID = -2383221501531994008L;
-	private final String message;
-	
-	public WalletException(String message) {
-		this.message = message;
+public class WalletException extends RuntimeException {
+	private static final long serialVersionUID = 1L;
+		
+	public WalletException() {
+		super();
 	}
 	
-	public String getMessage() {
-		return message;
+	public WalletException(String s) {
+		super(s);
+	}
+	
+	public WalletException(String s, Throwable t) {
+		super(s, t);
+	}
+	
+	public WalletException(Throwable t) {
+		super(t);
 	}
 
 }

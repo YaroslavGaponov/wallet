@@ -31,8 +31,12 @@ public class WalletStorage implements IWalletStorage {
 
 		try {
 			// get channel for database file
-			channel = FileChannel.open(path, StandardOpenOption.READ,
-					StandardOpenOption.WRITE);
+			channel = FileChannel.open
+				(
+						path, 
+						StandardOpenOption.READ,					
+						StandardOpenOption.WRITE
+				);
 
 			// mapping header and bucket structures
 			header = new Header(channel);
@@ -43,60 +47,76 @@ public class WalletStorage implements IWalletStorage {
 			storage = new Storage(channel);
 
 		} catch (IOException e) {
-			WalletException ex = new WalletException(e.getMessage());
-			ex.initCause(e);
-			throw ex;
+			throw new WalletException("Exception caught during WalletStorage.ctor: " + e.getMessage(), e);
 		}
 	}
 
 	public void close() {
 		try {
-			if (channel != null) {
+			if (channel != null && channel.isOpen()) {
 				channel.close();
 			}
 		} catch (IOException e) {
 		}
 	}
 
-	public static void createStorage(String filename, long records)
-			throws IOException, WalletException {
-
+	public static void createStorage(String filename, long records) throws WalletException {
 		assert (filename != null);
 		assert (records >= 0);
 
-		// create database file
-		FileChannel channel = FileChannel.open(Paths.get(filename),
-				StandardOpenOption.WRITE, StandardOpenOption.READ,
-				StandardOpenOption.CREATE);
-
-		// calculate a bucket size base on planning count of records
-		int bucketSize = Helper.getPrime(records);
-
-		// initialize header
-		Header header = new Header(channel);
-		header.setIdentifier(IHeader.Identifier);
-		header.setBucketSize(bucketSize);
-		header.setVersion(version);
-		header.setCount(0L);
-
-		// initialize bucket table
-		Bucket bucket = new Bucket(channel, IHeader.header_offset_start
-				+ IHeader.header_size, bucketSize);
-		for (int i = 0; i < bucketSize; i++) {
-			bucket.set(i, IStorage.EOF);
+		FileChannel channel = null;
+		try {
+			// create database file
+			channel = FileChannel.open
+				(
+						Paths.get(filename),
+						StandardOpenOption.WRITE, 
+						StandardOpenOption.READ,
+						StandardOpenOption.CREATE
+				);
+	
+			// calculate a bucket size base on planning count of records
+			int bucketSize = Helper.getPrime(records);
+	
+			// initialize header
+			Header header = new Header(channel);
+			header.setIdentifier(IHeader.Identifier);
+			header.setBucketSize(bucketSize);
+			header.setVersion(version);
+			header.setCount(0L);
+	
+			// initialize bucket table
+			Bucket bucket = new Bucket(channel, IHeader.header_offset_start
+					+ IHeader.header_size, bucketSize);
+			for (int i = 0; i < bucketSize; i++) {
+				bucket.set(i, IStorage.EOF);
+			}
+	
+			// close
+			channel.close();
+		
+		} catch (IOException e) {
+			throw new WalletException("Exception caught during WalletStorage.createStorage: " + e.getMessage(), e);
+		} finally {
+			if (channel != null && channel.isOpen()) {				
+				try {
+					channel.close();
+				} catch (IOException e) {}
+			}
 		}
-
-		// close
-		channel.close();
+		
 	}
 
-	public static void rebuild(String filename) throws WalletException,
-			IOException {
+	public static void rebuild(String filename) throws WalletException {
 		assert (filename != null);
 
 		// generate temp. filename
-		String tmpfilename = File.createTempFile("wallet", ".tmp")
-				.getAbsolutePath();
+		String tmpfilename;
+		try {
+			tmpfilename = File.createTempFile("wallet", ".tmp").getAbsolutePath();
+		} catch (IOException e) {
+			throw new WalletException("Exception caught during WalletStorage.rebuild: " + e.getMessage(), e);
+		}
 
 		// open database filename
 		WalletStorage src = new WalletStorage(filename);
@@ -126,7 +146,7 @@ public class WalletStorage implements IWalletStorage {
 	}
 
 	@SuppressWarnings("incomplete-switch")
-	public boolean exists(byte[] key) throws IOException {
+	public boolean exists(byte[] key) throws WalletException {
 		assert (key != null);
 		assert (key.length > 0);
 
@@ -149,7 +169,7 @@ public class WalletStorage implements IWalletStorage {
 	}
 
 	@SuppressWarnings("incomplete-switch")
-	public byte[] get(byte[] key) throws IOException {
+	public byte[] get(byte[] key) throws WalletException {
 		assert (key != null);
 		assert (key.length > 0);
 
@@ -172,7 +192,7 @@ public class WalletStorage implements IWalletStorage {
 	}
 
 	@SuppressWarnings("incomplete-switch")
-	public boolean set(byte[] key, byte[] value) throws IOException {
+	public boolean set(byte[] key, byte[] value) throws WalletException {
 		assert (key != null);
 		assert (key.length > 0);
 
@@ -207,7 +227,7 @@ public class WalletStorage implements IWalletStorage {
 	}
 
 	@SuppressWarnings("incomplete-switch")
-	public boolean remove(byte[] key) throws IOException {
+	public boolean remove(byte[] key) throws WalletException {
 		assert (key != null);
 		assert (key.length > 0);
 
@@ -238,7 +258,7 @@ public class WalletStorage implements IWalletStorage {
 		return header.getCount();
 	}
 
-	public long iterator(IterationAction iterationAction) throws IOException {
+	public long iterator(IterationAction iterationAction) throws WalletException {
 		long recs = 0;
 		for (int i = 0; i < bucketSize; i++) {
 			long offset = bucket.get(i);
@@ -256,7 +276,7 @@ public class WalletStorage implements IWalletStorage {
 		return recs;
 	}
 
-	private void saveLink(int index, long current, long previous) throws IOException {
+	private void saveLink(int index, long current, long previous) throws WalletException {
 		assert(index >= 0); assert(index <= bucketSize);
 		
 		if (previous == IStorage.EOF) {

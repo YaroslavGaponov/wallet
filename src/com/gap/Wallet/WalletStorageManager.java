@@ -1,6 +1,5 @@
 package com.gap.Wallet;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,13 +33,15 @@ public class WalletStorageManager implements IWalletStorage, ITransaction {
 		operation.clear();
 		keys.clear();
 		values.clear();
+		
+		// save records counter
 		counter  = walletStorage.count();		
 		
 		// start transaction
 		transaction = true;
 	}
 		
-	public void commit() throws WalletException, IOException {
+	public void commit() throws WalletException {
 		if (!transaction) {
 			throw new WalletException("Transaction has not started.");
 		}
@@ -74,15 +75,52 @@ public class WalletStorageManager implements IWalletStorage, ITransaction {
 		transaction = false;		
 	}
 
-	public boolean exists(byte[] key) throws IOException {
+	public boolean exists(byte[] key) throws WalletException {
+		if (transaction) {
+			//create hash code for key
+			long hash = Helper.hashCodeLong(key);
+			
+			// if we can't work with this key - get from storage
+			if (!operation.containsKey(hash)) {
+				return walletStorage.exists(key);
+			}
+			
+			// if we worked early
+			switch (operation.get(hash)) {
+				case set:
+					return true;
+				case remove:
+					return false;
+			}
+		}
+		
 		return walletStorage.exists(key);
 	}
 
-	public byte[] get(byte[] key) throws IOException {
+	public byte[] get(byte[] key) throws WalletException {
+		if (transaction) {
+			//create hash code for key
+			long hash = Helper.hashCodeLong(key);
+			
+			// if we can't work with this key - get from storage
+			if (!operation.containsKey(hash)) {
+				return walletStorage.get(key);
+			}
+			
+			// if we worked early
+			switch (operation.get(hash)) {
+				case set:				
+					byte[] value = values.get(hash);
+					return value;				
+				case remove:
+					return null;
+			}
+		}
+		
 		return walletStorage.get(key);
 	}
 
-	public boolean set(byte[] key, byte[] value) throws IOException {
+	public boolean set(byte[] key, byte[] value) throws WalletException {
 		if (transaction) {						
 			// create hash code for key
 			long hash = Helper.hashCodeLong(key);
@@ -111,7 +149,7 @@ public class WalletStorageManager implements IWalletStorage, ITransaction {
 		return walletStorage.set(key, value);
 	}
 
-	public boolean remove(byte[] key) throws IOException {
+	public boolean remove(byte[] key) throws WalletException {
 		if (transaction) {
 			// create hash code for key
 			long hash = Helper.hashCodeLong(key);

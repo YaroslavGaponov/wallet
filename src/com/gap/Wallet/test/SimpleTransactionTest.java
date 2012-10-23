@@ -13,7 +13,7 @@ public class SimpleTransactionTest {
 		System.out.println(new Date() + " " + message);
 	}
 
-	public static void main(String[] args) throws NumberFormatException, IOException, WalletException {
+	public static void main(String[] args) throws NumberFormatException, WalletException, IOException {
 
 		if (args.length != 2) {
 			System.out.println("test filename rows");
