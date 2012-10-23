@@ -33,7 +33,7 @@ class Helper {
 		return force.equal;
 	}	
 	
-	
+			
 	public static int getPrime(long number){
 		  int primes[] = {
 		    1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 43, 47, 53, 59, 61, 71, 79, 83,
@@ -72,4 +72,20 @@ class Helper {
 		  
 		  return primes[primes.length-1];
 		}
+	
+	
+	public static long hashCodeLong(byte[] key) {
+	    long hash = 0;
+	    
+	    for(int i = 0; i < key.length; i++) {
+	        hash += key[i];
+	        hash += (hash << 10);
+	        hash ^= (hash >> 6);
+	    }
+	    hash += (hash << 3);
+	    hash ^= (hash >> 11);
+	    hash += (hash << 15);
+	    
+	    return hash;
+	}
 }

@@ -12,7 +12,5 @@ public interface IWalletStorage {
 	public boolean remove(byte[] key) throws IOException;
 	public long count();
 	
-	public long iterator(IterationAction iterationAction) throws IOException;
-	
 	public void close();
 }
