@@ -2,7 +2,7 @@ package gap.Wallet.test;
 
 import gap.Wallet.WalletException;
 import gap.Wallet.WalletStorage;
-import gap.Wallet.WalletStorageManager;
+import gap.Wallet.WalletStorageClient;
 
 import java.io.IOException;
 import java.util.Date;
@@ -25,30 +25,30 @@ public class SimpleTransactionTest {
 			WalletStorage.createStorage(args[0], Integer.parseInt(args[1]));
 		show("done");
 		
-		WalletStorageManager storage = new WalletStorageManager(args[0]);
+		WalletStorageClient client = new WalletStorageClient(args[0]);
 		
-		storage.set("key #1".getBytes(), "value #1".getBytes());
-		storage.set("key #2".getBytes(), "value #2".getBytes());
+		client.set("key #1".getBytes(), "value #1".getBytes());
+		client.set("key #2".getBytes(), "value #2".getBytes());
 		
-		show("count = " + storage.count());
+		show("count = " + client.count());
 		
-		storage.start();
-		storage.remove("key #2".getBytes());
-		show("count = " + storage.count());
-		storage.set("key #3".getBytes(), "value #3".getBytes());
-		show("count = " + storage.count());
-		storage.commit();
-		show("count = " + storage.count());
+		client.start();
+		client.remove("key #2".getBytes());
+		show("count = " + client.count());
+		client.set("key #3".getBytes(), "value #3".getBytes());
+		show("count = " + client.count());
+		client.commit();
+		show("count = " + client.count());
 		
-		storage.start();		
-		storage.set("key #4".getBytes(), "value #4".getBytes());
-		storage.set("key #5".getBytes(), "value #5".getBytes());
-		storage.set("key #6".getBytes(), "value #6".getBytes());
-		show("count = " + storage.count());
-		storage.rollback();
-		show("count = " + storage.count());
+		client.start();		
+		client.set("key #4".getBytes(), "value #4".getBytes());
+		client.set("key #5".getBytes(), "value #5".getBytes());
+		client.set("key #6".getBytes(), "value #6".getBytes());
+		show("count = " + client.count());
+		client.rollback();
+		show("count = " + client.count());
 		
-		storage.close();
+		client.close();
 
 	}
 
