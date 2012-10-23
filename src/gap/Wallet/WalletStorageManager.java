@@ -4,7 +4,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WalletStorageManager {
+class WalletStorageManager {
 	private final static Map<String,IWalletStorage> files = new HashMap<String,IWalletStorage>();
 	
 	private WalletStorageManager() {		
