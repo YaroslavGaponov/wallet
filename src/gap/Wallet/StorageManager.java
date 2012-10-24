@@ -6,10 +6,14 @@ import java.util.Map;
 
 class StorageManager implements IWalletStorage {
 	
+	// pool for database file drivers
 	private final static Map<String,StorageDriver> drivers = new HashMap<String,StorageDriver>();
 	private final static Map<String, Integer> clients = new HashMap<String, Integer>();
+	
+	// blocking or nonblocking mode
 	private static boolean blocking = true; 
 	 
+	// session variables
 	private final String storagefile;
 	private final IWalletStorage driver;
 	
@@ -25,11 +29,13 @@ class StorageManager implements IWalletStorage {
 	public static synchronized StorageManager createSession(String filename) {
 		assert(filename != null);
 		
+		// initialize driver for new database file 
 		String storagefile = Paths.get(filename).toFile().getAbsolutePath();
 		if (!drivers.containsKey(storagefile)) {
 			drivers.put(storagefile, new StorageDriver(storagefile));
 		}
 		
+		// initialize or increment clients counter
 		if (clients.containsKey(storagefile)) {
 			clients.put(storagefile, clients.get(storagefile) + 1);
 		} else {
@@ -78,7 +84,6 @@ class StorageManager implements IWalletStorage {
 		return driver.remove(key);
 
 	}
-
 
 	public long count() {
 		if (blocking && (clients.get(storagefile) > 1)) {			
