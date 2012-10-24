@@ -1,8 +1,8 @@
 package gap.Wallet.test;
 
-import gap.Wallet.WalletException;
-import gap.Wallet.StorageDriver;
-import gap.Wallet.StorageSession;
+import gap.Wallet.Storage.StorageDriver;
+import gap.Wallet.Storage.StorageSession;
+import gap.Wallet.Storage.WalletException;
 
 import java.io.IOException;
 import java.util.Date;
