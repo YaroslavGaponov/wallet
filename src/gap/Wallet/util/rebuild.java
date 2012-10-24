@@ -1,7 +1,7 @@
 package gap.Wallet.util;
 
 import gap.Wallet.WalletException;
-import gap.Wallet.WalletStorage;
+import gap.Wallet.StorageDriver;
 
 import java.io.IOException;
 import java.util.Date;
@@ -22,7 +22,7 @@ public class rebuild {
 		}
 		
 		show("rebuilding ...");		
-			WalletStorage.rebuild(args[0]);
+			StorageDriver.rebuild(args[0]);
 		show("done");
 	}
 

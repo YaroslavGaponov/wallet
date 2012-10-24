@@ -1,8 +1,8 @@
 package gap.Wallet.test;
 
-import gap.Wallet.IWalletStorage;
+import gap.Wallet.StorageSession;
 import gap.Wallet.WalletException;
-import gap.Wallet.WalletStorage;
+import gap.Wallet.StorageDriver;
 
 import java.io.IOException;
 import java.util.Date;
@@ -23,15 +23,15 @@ public class SimpleTest {
 
 		
 		show("creating ...");
-			WalletStorage.createStorage(args[0], Integer.parseInt(args[1]));
+			StorageDriver.createStorage(args[0], Integer.parseInt(args[1]));
 		show("done");
 				
 		String key = "key #%s"; String value = "value #%s";		
 		
 		show("filling ...");
-			IWalletStorage w = null;
+			StorageSession  w = null;
 			try {			
-				w = new WalletStorage(args[0]);
+				w = new StorageSession(args[0]);
 				for (long i=0; i<Integer.parseInt(args[1]); i++) {
 					w.set(String.format(key, i).getBytes(), String.format(value, i).getBytes());
 				}
@@ -45,7 +45,7 @@ public class SimpleTest {
 			
 		
 		show("searching ...");		
-			w = new WalletStorage(args[0]);
+			w = new StorageSession(args[0]);
 			long ss = Integer.parseInt(args[1]) - 1;
 			while (ss != 0) {
 				byte[] bytesKey  = String.format(key, ss).getBytes();
@@ -60,7 +60,7 @@ public class SimpleTest {
 		
 
 		show("removing ...");		
-			w = new WalletStorage(args[0]);
+			w = new StorageSession(args[0]);
 			long rr = Integer.parseInt(args[1]) - 1;
 			while (rr != 0) {
 				byte[] bytesKey  = String.format(key, rr).getBytes();
@@ -74,7 +74,7 @@ public class SimpleTest {
 		show("done");
 		
 		show("inserting ...");		
-			w = new WalletStorage(args[0]);
+			w = new StorageSession(args[0]);
 			show("count = " + w.count());
 			long ii = Integer.parseInt(args[1]) - 1;
 			while (ii != 0) {

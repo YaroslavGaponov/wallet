@@ -1,8 +1,8 @@
 package gap.Wallet.test;
 
 import gap.Wallet.WalletException;
-import gap.Wallet.WalletStorage;
-import gap.Wallet.WalletStorageClient;
+import gap.Wallet.StorageDriver;
+import gap.Wallet.StorageSession;
 
 import java.io.IOException;
 import java.util.Date;
@@ -22,10 +22,10 @@ public class SimpleTransactionTest {
 		}
 
 		show("creating ...");
-			WalletStorage.createStorage(args[0], Integer.parseInt(args[1]));
+			StorageDriver.createStorage(args[0], Integer.parseInt(args[1]));
 		show("done");
 		
-		WalletStorageClient client = new WalletStorageClient(args[0]);
+		StorageSession client = new StorageSession(args[0]);
 		
 		client.set("key #1".getBytes(), "value #1".getBytes());
 		client.set("key #2".getBytes(), "value #2".getBytes());

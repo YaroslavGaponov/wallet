@@ -3,9 +3,9 @@ package gap.Wallet;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WalletStorageClient implements IWalletStorage, ITransaction {
+public class StorageSession implements IWalletStorage, ITransaction {
 	
-	private IWalletStorage walletStorage = null;
+	private IWalletStorage session = null;
 	private boolean transaction = false;
 	private long counter;
 	
@@ -15,8 +15,8 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 	private Map<Long, byte[]> keys = null;
 	private Map<Long, byte[]> values = null;
 	
-	public WalletStorageClient(String filename) throws WalletException {
-		walletStorage = WalletStorageManager.getInstance(filename);
+	public StorageSession(String filename) throws WalletException {
+		session = StorageManager.createSession(filename);
 		
 		// transaction logs
 		operation = new HashMap<Long, Operation>();
@@ -35,7 +35,7 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 		values.clear();
 		
 		// save records counter
-		counter  = walletStorage.count();		
+		counter  = session.count();		
 		
 		// start transaction
 		transaction = true;
@@ -56,11 +56,11 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 				case set:
 					key = keys.get(hash);
 					value = values.get(hash);
-					walletStorage.set(key, value);
+					session.set(key, value);
 					break;
 				case remove:
 					key = keys.get(hash);
-					walletStorage.remove(key);
+					session.remove(key);
 					break;
 			}
 		}
@@ -82,7 +82,7 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 			
 			// if we can't work with this key - get from storage
 			if (!operation.containsKey(hash)) {
-				return walletStorage.exists(key);
+				return session.exists(key);
 			}
 			
 			// if we worked early
@@ -94,7 +94,7 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 			}
 		}
 		
-		return walletStorage.exists(key);
+		return session.exists(key);
 	}
 
 	public byte[] get(byte[] key) throws WalletException {
@@ -104,7 +104,7 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 			
 			// if we can't work with this key - get from storage
 			if (!operation.containsKey(hash)) {
-				return walletStorage.get(key);
+				return session.get(key);
 			}
 			
 			// if we worked early
@@ -117,7 +117,7 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 			}
 		}
 		
-		return walletStorage.get(key);
+		return session.get(key);
 	}
 
 	public boolean set(byte[] key, byte[] value) throws WalletException {
@@ -131,7 +131,7 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 					!(
 							(operation.containsKey(hash) && (operation.get(hash) == Operation.set)) 
 							|| 
-							(walletStorage.exists(key))
+							(session.exists(key))
 					)
 			) 
 			{ counter++; }
@@ -146,7 +146,7 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 		}
 		
 		// set without transaction
-		return walletStorage.set(key, value);
+		return session.set(key, value);
 	}
 
 	public boolean remove(byte[] key) throws WalletException {
@@ -159,7 +159,7 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 			(
 				(operation.containsKey(hash) && (operation.get(hash) == Operation.set))
 				|| 
-				(walletStorage.exists(key))
+				(session.exists(key))
 			) 
 			{ counter--; }
 			
@@ -172,18 +172,18 @@ public class WalletStorageClient implements IWalletStorage, ITransaction {
 		}
 		
 		// remove without transaction
-		return walletStorage.remove(key);
+		return session.remove(key);
 	}
 
 	public long count() {
 		return 
 				transaction 
 				? 
-				counter : walletStorage.count();
+				counter : session.count();
 	}
 
 	public void close() {
-		 walletStorage.close();
+		 session.close();
 	}
 
 }

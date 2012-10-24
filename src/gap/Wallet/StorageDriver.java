@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-public class WalletStorage implements IWalletStorage {
+public class StorageDriver implements IWalletStorage {
 
 	// database channel
 	private final FileChannel channel;
@@ -20,7 +20,7 @@ public class WalletStorage implements IWalletStorage {
 	// bucket table size
 	private final int bucketSize;
 
-	public WalletStorage(String filename) throws WalletException {
+	public StorageDriver(String filename) throws WalletException {
 		assert (filename != null);
 
 		Path path = Paths.get(filename);
@@ -33,9 +33,9 @@ public class WalletStorage implements IWalletStorage {
 			// get channel for database file
 			channel = FileChannel.open
 				(
-						path, 
-						StandardOpenOption.READ,					
-						StandardOpenOption.WRITE
+					path, 
+					StandardOpenOption.READ,					
+					StandardOpenOption.WRITE
 				);
 
 			// mapping header and bucket structures
@@ -86,8 +86,13 @@ public class WalletStorage implements IWalletStorage {
 			header.setCount(0L);
 	
 			// initialize bucket table
-			Bucket bucket = new Bucket(channel, IHeader.header_offset_start
-					+ IHeader.header_size, bucketSize);
+			Bucket bucket = new Bucket
+				(
+						channel,
+						IHeader.header_offset_start + IHeader.header_size,
+						bucketSize
+				);
+			
 			for (int i = 0; i < bucketSize; i++) {
 				bucket.set(i, IStorage.EOF);
 			}
@@ -119,11 +124,11 @@ public class WalletStorage implements IWalletStorage {
 		}
 
 		// open database filename
-		WalletStorage src = new WalletStorage(filename);
+		StorageDriver src = new StorageDriver(filename);
 
 		// create and open temp. filename
-		WalletStorage.createStorage(tmpfilename, src.count());
-		WalletStorage tmp = new WalletStorage(tmpfilename);
+		StorageDriver.createStorage(tmpfilename, src.count());
+		StorageDriver tmp = new StorageDriver(tmpfilename);
 
 		// copy
 		for (int i = 0; i < src.bucketSize; i++) {
