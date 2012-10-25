@@ -7,13 +7,9 @@ import java.nio.channels.*;
 import java.util.*;
 
 public abstract class SocketServer {
-	
-	private Map<String, String> params = new HashMap<String,String>();
 
 	private final static int DEFAULT_BUFFER_SIZE = 16384;
 	private final ByteBuffer buffer;
-
-
 
 	private final Selector selector;
 	private final ServerSocketChannel ssc;
@@ -33,7 +29,6 @@ public abstract class SocketServer {
 		ssc.register(selector, SelectionKey.OP_ACCEPT);
 	}
 
-
 	public void start() throws IOException {
 		try {
 			while (true) {
@@ -48,20 +43,20 @@ public abstract class SocketServer {
 				while (it.hasNext()) {
 					SelectionKey key = (SelectionKey) it.next();
 
-					if ((key.readyOps() & SelectionKey.OP_ACCEPT) == SelectionKey.OP_ACCEPT) {
-												
+					if (key.isAcceptable()) {
+
 						Socket s = ssc.accept().socket();
 						SocketChannel sc = s.getChannel();
 						sc.configureBlocking(false);
 						sc.register(selector, SelectionKey.OP_READ);
-						
-					} else if ((key.readyOps() & SelectionKey.OP_READ) == SelectionKey.OP_READ) {
+						key.attach(null);
+
+					} else if (key.isReadable()) {
 
 						SocketChannel sc = null;
 						try {
-
 							sc = (SocketChannel) key.channel();
-							boolean ok = processing(sc);
+							boolean ok = ioworker(key, sc);
 
 							if (!ok) {
 								key.cancel();
@@ -82,7 +77,7 @@ public abstract class SocketServer {
 							} catch (IOException ex) {
 								ex.printStackTrace();
 							}
-						}						
+						}
 					}
 				}
 				keys.clear();
@@ -93,54 +88,58 @@ public abstract class SocketServer {
 		}
 	}
 
-	
 	public void stop() {
 		Set<SelectionKey> keys = selector.selectedKeys();
 		Iterator<SelectionKey> it = keys.iterator();
 		while (it.hasNext()) {
 			SelectionKey key = (SelectionKey) it.next();
-			if (key.channel().isOpen()) {				
+			if (key.channel().isOpen()) {
 				try {
 					key.channel().close();
 				} catch (IOException e) {
 				}
 			}
 		}
-		
+
 		if (ssc.isOpen()) {
 			try {
 				ssc.close();
 			} catch (IOException e) {
 			}
 		}
-		
+
 	}
-	
+
 	public abstract byte[] handler(byte[] request);
-	
-	private boolean processing(SocketChannel sc) throws IOException {
+
+	private boolean ioworker(SelectionKey key, SocketChannel sc)
+			throws IOException {
+
+		byte[] tail = (byte[]) key.attachment();
+
 		buffer.clear();
+		if (tail != null) {
+			buffer.put(tail);
+		}
 		sc.read(buffer);
 		buffer.flip();
 
 		if (buffer.limit() == 0) {
 			return false;
-		}		
-					
-		byte[] response = handler(buffer.array());
-		if (response != null) {
-			sc.write(ByteBuffer.wrap(response));
 		}
-		
-		return false;
-	}
-	
-	public void addParam(String name, String value) {
-		params.put(name, value);
-	}
-	
-	public String getParam(String name) {
-		return params.get(name);
+
+		int j = 0;
+		for (int i = 0; i < buffer.limit(); i++) {
+			if (buffer.get(i) == '\0') {
+				byte[] response = handler(Arrays.copyOfRange(buffer.array(), j, i));
+				sc.write(ByteBuffer.wrap(response));
+				j = i + 1;
+			}
+		}
+
+		key.attach(Arrays.copyOfRange(buffer.array(), j, buffer.limit()));
+
+		return true;
 	}
 
 }

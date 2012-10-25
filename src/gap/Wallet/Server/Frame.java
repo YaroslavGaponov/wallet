@@ -4,12 +4,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Frame {
-	public enum Command { CONNECT, CONNECTED, SET, GET, EXISTS, REMOVE, START, COMMIT, ROLLBACK, MESSAGE, SUCCESS, ERROR, DISCONNECT, DISCONNECTED };
+	public enum Command 
+	{ 		
+		CONNECT,
+		DISCONNECT, 
+		SET, 
+		GET,
+		COUNT,
+		EXISTS,
+		REMOVE, 
+		START, 
+		COMMIT, 
+		ROLLBACK,
+		MESSAGE
+	};
 	
-	public Command command;
-	public Map<String, String> params = new HashMap<String, String>();
-	
-	public Frame() {
+	private Command command;
+	private Map<String, String> params = new HashMap<String, String>();
+		
+	private Frame() {
 		
 	}
 	
@@ -17,25 +30,39 @@ public class Frame {
 		this.command = command;
 	}
 	
-	public byte[] getBytes() {
+	
+	public Command getCommand() {
+		return command;
+	}
+	
+	public void addParam(String name, String value) {
+		params.put(name, value);
+	}
+	
+	public String getParam(String name) {
+		return params.get(name);
+	}
+	
+	public String toString() {
 		StringBuilder s = new StringBuilder();
 		s.append(command.toString() + "\n");
 		for (String key : params.keySet()) {
 			s.append(key + ":" + params.get(key) + "\n");
-		}			
-		return s.toString().getBytes();
+		}
+		s.append('\0');
+		return s.toString();
 	}
 	
-	public static Frame parse(byte[] raw) {
-		String[] lines = new String(raw).split("\n");
-		Frame frame = new Frame();
-		frame.command = Command.valueOf(lines[0]);
-		for (int i=1; i<lines.length; i++) {
-			String kv[] = lines[i].split(":");
-			if (kv.length == 2) {
-				frame.params.put(kv[0], kv[1]);
+	public static Frame parse(String data) {
+			String[] lines = data.split("\n");
+			Frame frame = new Frame();
+			frame.command = Command.valueOf(lines[0]);
+			for (int i=1; i<lines.length; i++) {
+				String kv[] = lines[i].split(":");
+				if (kv.length == 2) {
+					frame.params.put(kv[0], kv[1]);
+				}
 			}
-		}
 		return frame;		
 	}
 
