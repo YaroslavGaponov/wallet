@@ -12,7 +12,8 @@ import gap.Wallet.Server.Frame.Command;
 import gap.Wallet.Storage.StorageSession;
 import gap.Wallet.Storage.WalletException;
 
-public class WalletSocketServer extends SocketServer {
+public class WalletSocketServer extends SocketServer implements Runnable {
+	
 	private final static int DEFAULT_PORT = 3678;
 	private final Map<String, StorageSession> sessions = new HashMap<String, StorageSession>();
 
@@ -27,7 +28,6 @@ public class WalletSocketServer extends SocketServer {
 		this.path = new File(path).getAbsolutePath() + '/';
 	}
 
-	@SuppressWarnings("incomplete-switch")
 	public byte[] handler(byte[] request) {		
 		Frame requestFrame = Frame.parse(new String(request));
 
@@ -64,12 +64,14 @@ public class WalletSocketServer extends SocketServer {
 				case DISCONNECT:
 					responseFrame = disconnect(requestFrame);
 					break;
+			default:
+				break;
 			}		
 			
 			// return frameID back
 			String frameId = requestFrame.getParam("frameID"); 
 			responseFrame.addParam("frameID", frameId);
-			
+						
 			return responseFrame.toString().getBytes();
 		} catch (WalletException ex) {
 			return null; 
@@ -172,6 +174,15 @@ public class WalletSocketServer extends SocketServer {
 		Frame response = new Frame(Command.MESSAGE);
 		response.addParam("result", ((Boolean)(true)).toString());
 		return response;
+	}
+
+	@Override
+	public void run() {
+		try {
+			start();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}		
 	}
 
 }

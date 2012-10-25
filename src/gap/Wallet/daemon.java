@@ -2,7 +2,7 @@ package gap.Wallet;
 
 import java.io.IOException;
 
-public class demon {
+public class daemon {
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
@@ -14,9 +14,9 @@ public class demon {
 		String path = args[1];
 		
 		WalletSocketServer server = new  WalletSocketServer(port, path);
-		System.out.println("wallet demon is starting on " + port);
-		server.start();
-				
+		System.out.println("wallet demon is starting on " + port);		
+		Thread service = new Thread(server);		
+		service.run();				
 	}
 
 }
