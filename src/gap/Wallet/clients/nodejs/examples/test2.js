@@ -1,16 +1,27 @@
 
 var w = require('../lib/wallet');
 
-var client = w.Wallet(12345, 'kbp1-dhp-F37307', 'test');
+var client = w.Wallet(12345, 'localhost', 'test');
 
-client.connect(function() {
-    console.log('session = ' + client.session);    
-    client.count(function(frame) {
-        console.log('count = ' + frame.getParam('result')); 
-		var start = new Date();
-		client.get("key #"+1000, function(frame) {
-			var time = new Date() - start;
-			console.log(frame.getParam('result') + ' -> ' + time + ' ms');
-		});
+var halt = function(message) {
+    console.log(message);
+    process.exit();
+}
+
+client.connect(function(err, sessionID) {
+    if (err) halt(err);
+    console.log('session = ' + sessionID);    
+    client.count(function(err, recs) {
+        console.log('count = ' + recs);	
+		while (recs > 0) {
+		    recs >>= 1;
+		    (function(n) {
+			var start = new Date();
+			client.get('key #'+n, function(err, result) {
+				var time = new Date() - start;
+				console.log('key #'+n + ' = '+ result + ' -> ' + time + ' ms');
+			});
+		    }(recs));
+		}
     });    
 });

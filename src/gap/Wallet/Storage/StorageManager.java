@@ -11,7 +11,7 @@ class StorageManager implements IWalletStorage {
 	private final static Map<String, Integer> clients = new HashMap<String, Integer>();
 	
 	// blocking or nonblocking mode
-	private static boolean blocking = false; 
+	private static boolean blocking = true; 
 	 
 	// session variables
 	private final String storagefile;

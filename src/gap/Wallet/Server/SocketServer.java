@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.*;
 
 public abstract class SocketServer {
@@ -43,40 +45,68 @@ public abstract class SocketServer {
 				while (it.hasNext()) {
 					SelectionKey key = (SelectionKey) it.next();
 
-					if (key.isAcceptable()) {
-
-						Socket s = ssc.accept().socket();
-						SocketChannel sc = s.getChannel();
-						sc.configureBlocking(false);
-						sc.register(selector, SelectionKey.OP_READ);
-						key.attach(null);
-
-					} else if (key.isReadable()) {
-
-						SocketChannel sc = null;
-						try {
-							sc = (SocketChannel) key.channel();
-							boolean ok = ioworker(key, sc);
-
-							if (!ok) {
-								key.cancel();
-
-								Socket s = null;
-								try {
-									s = sc.socket();
-									s.close();
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-							}
-
-						} catch (IOException e) {
-							key.cancel();
+					if (key.isValid()) {
+						if (key.isAcceptable()) {
+							Socket s = ssc.accept().socket();
+							SocketChannel sc = s.getChannel();
+							sc.configureBlocking(false);
+							sc.register(selector, SelectionKey.OP_READ);
+	
+						} else if (key.isReadable()) {
+							
 							try {
-								sc.close();
+							
+								Attachment attachment = (Attachment) key.attachment();
+								if (attachment == null) {
+									attachment = new Attachment();
+									key.attach(attachment);
+								}
+								
+								SocketChannel sc  = (SocketChannel) key.channel();
+								sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+								
+								buffer.clear();
+								if (attachment.in.length() > 0) {
+									buffer.put(attachment.in.toString().getBytes());
+								}
+								sc.read(buffer);
+								buffer.flip();
+		
+								 Charset charset = Charset.defaultCharset();  
+							     CharsetDecoder decoder = charset.newDecoder();  
+							     CharBuffer charBuffer = decoder.decode(buffer); 
+								
+								attachment.in.setLength(0);
+								for (int i=0; i<charBuffer.limit(); i++) {
+									attachment.in.append( charBuffer.get(i));
+									if ( charBuffer.get(i) == '\0') {
+										attachment.out.append(handler(attachment.in.toString()));
+										attachment.in.setLength(0);
+									}							
+								}
+							
 							} catch (IOException ex) {
-								ex.printStackTrace();
+								key.cancel();
+								key.channel().close();
 							}
+							
+							
+						} else if (key.isWritable()) {	
+							
+							try {							
+								
+								Attachment attachment = (Attachment) key.attachment();
+								if (attachment != null && attachment.out.length() > 0) {	
+									SocketChannel sc  = (SocketChannel) key.channel();															
+									sc.write(ByteBuffer.wrap(attachment.out.toString().getBytes()));
+									attachment.out.setLength(0);
+								}
+								
+							} catch (IOException ex) {
+								key.cancel();
+								key.channel().close();
+							}
+	
 						}
 					}
 				}
@@ -110,36 +140,6 @@ public abstract class SocketServer {
 
 	}
 
-	public abstract byte[] handler(byte[] request);
-
-	private boolean ioworker(SelectionKey key, SocketChannel sc)
-			throws IOException {
-
-		byte[] tail = (byte[]) key.attachment();
-
-		buffer.clear();
-		if (tail != null) {
-			buffer.put(tail);
-		}
-		sc.read(buffer);
-		buffer.flip();
-
-		if (buffer.limit() == 0) {
-			return false;
-		}
-
-		int j = 0;
-		for (int i = 0; i < buffer.limit(); i++) {
-			if (buffer.get(i) == '\0') {
-				byte[] response = handler(Arrays.copyOfRange(buffer.array(), j, i));
-				sc.write(ByteBuffer.wrap(response));
-				j = i + 1;
-			}
-		}
-
-		key.attach(Arrays.copyOfRange(buffer.array(), j, buffer.limit()));
-
-		return true;
-	}
+	public abstract String handler(String request);
 
 }

@@ -1,4 +1,4 @@
-package gap.Wallet;
+package gap.Wallet.deamon;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +28,8 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		this.path = new File(path).getAbsolutePath() + '/';
 	}
 
-	public byte[] handler(byte[] request) {		
-		Frame requestFrame = Frame.parse(new String(request));
+	public String handler(String request) {		
+		Frame requestFrame = Frame.parse(request);
 
 		Frame responseFrame = null;
 		try {
@@ -72,9 +72,11 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 			String frameId = requestFrame.getParam("frameID"); 
 			responseFrame.addParam("frameID", frameId);
 						
-			return responseFrame.toString().getBytes();
+			return responseFrame.toString();
 		} catch (WalletException ex) {
-			return null; 
+			responseFrame = new Frame(Command.ERROR);
+			responseFrame.addParam("result", ex.getMessage());
+			return responseFrame.toString(); 
 		}
 	}
 	
@@ -84,8 +86,8 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		String session = UUID.randomUUID().toString();
 		sessions.put(session, new StorageSession(path + database));
 		
-		Frame response = new Frame(Command.MESSAGE);
-		response.addParam("session", session.toString());
+		Frame response = new Frame(Command.ANSWER);
+		response.addParam("result", session.toString());
 		return response;
 	}
 
@@ -95,7 +97,7 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		String value = request.getParam("value");
 		Boolean res = sessions.get(session).set(key.getBytes(), value.getBytes());
 				
-		Frame response = new Frame(Command.MESSAGE);
+		Frame response = new Frame(Command.ANSWER);
 		response.addParam("result", res.toString());
 		return response;
 	}
@@ -105,7 +107,7 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		String key = request.getParam("key");
 		Boolean res = sessions.get(session).exists(key.getBytes());
 		
-		Frame response = new Frame(Command.MESSAGE);
+		Frame response = new Frame(Command.ANSWER);
 		response.addParam("result", res.toString());
 		return response;
 	}
@@ -114,7 +116,7 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		String session = request.getParam("session");
 		Long count = sessions.get(session).count();
 
-		Frame response = new Frame(Command.MESSAGE);
+		Frame response = new Frame(Command.ANSWER);
 		response.addParam("result", count.toString());
 		return response;		
 	}
@@ -124,7 +126,7 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		String key = request.getParam("key");
 		byte[] value = sessions.get(session).get(key.getBytes());
 		
-		Frame response = new Frame(Command.MESSAGE);
+		Frame response = new Frame(Command.ANSWER);
 		response.addParam("result", new String(value));
 		return response;		
 	}
@@ -134,7 +136,7 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		String key = request.getParam("key");
 		Boolean res = sessions.get(session).remove(key.getBytes());
 		
-		Frame response = new Frame(Command.MESSAGE);
+		Frame response = new Frame(Command.ANSWER);
 		response.addParam("result", res.toString());
 		return response;
 	}
@@ -143,7 +145,7 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		String session = request.getParam("session");
 		sessions.get(session).start();
 		
-		Frame response = new Frame(Command.MESSAGE);
+		Frame response = new Frame(Command.ANSWER);
 		response.addParam("result", ((Boolean)(true)).toString());
 		return response;
 
@@ -153,7 +155,7 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		String session = request.getParam("session");
 		sessions.get(session).commit();
 		
-		Frame response = new Frame(Command.MESSAGE);
+		Frame response = new Frame(Command.ANSWER);
 		response.addParam("result", ((Boolean)(true)).toString());
 		return response;
 	}
@@ -162,7 +164,7 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		String session = request.getParam("session");
 		sessions.get(session).rollback();
 		
-		Frame response = new Frame(Command.MESSAGE);
+		Frame response = new Frame(Command.ANSWER);
 		response.addParam("result", ((Boolean)(true)).toString());
 		return response;
 	}
@@ -171,12 +173,11 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		String session = request.getParam("session");
 		sessions.get(session).close();
 		
-		Frame response = new Frame(Command.MESSAGE);
+		Frame response = new Frame(Command.ANSWER);
 		response.addParam("result", ((Boolean)(true)).toString());
 		return response;
 	}
 
-	@Override
 	public void run() {
 		try {
 			start();

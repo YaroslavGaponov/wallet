@@ -21,7 +21,7 @@ public class build {
 		long records = Integer.parseInt(args[1]);
 		
 		show("creating ...");
-		StorageDriver.createStorage(filename, records);
+			StorageDriver.createStorage(filename, records);
 		show("done");
 		
 	}

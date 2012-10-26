@@ -9,7 +9,7 @@ public class Frame {
 		CONNECT, DISCONNECT, SET, GET, COUNT, EXISTS, REMOVE, START, COMMIT, ROLLBACK,
 
 		// server message
-		MESSAGE
+		ANSWER, ERROR
 	};
 
 	private Command command;
@@ -54,7 +54,7 @@ public class Frame {
 			if (kv.length == 2) {
 				frame.params.put(kv[0], kv[1]);
 			}
-		}
+		}		
 		return frame;
 	}
 

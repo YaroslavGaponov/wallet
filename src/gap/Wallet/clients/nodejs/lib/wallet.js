@@ -8,6 +8,19 @@ function getId() {
     return 'id' + Math.floor(Math.random() * 999999999999999999999);
 }
 
+
+function hashCode(key) {
+    var hash = 0;
+    for (var i=0; i<key.length; i++) {
+        hash = ((hash << 5) - hash) + key.charCodeAt(i);
+        hash = hash & hash;
+    }    
+    return hash & 0xffff;
+}
+
+/*
+ Wallet
+*/
 var Wallet = module.exports.Wallet = function(port, host, database) {
     if (this instanceof Wallet) {
         this.port = port || '3678';
@@ -33,31 +46,46 @@ Wallet.prototype.connect = function(callback) {
         frame.addParam('database', self.database);        
         self.socket.write(frame.getBytes());
                 
-        self.subscribers[frameId] = function(frame) {
-            self.session = frame.getParam('session');
-            return callback();
+        self.subscribers[frameId] = function(err, result) {
+            self.session = result;
+            return callback(err, result);
         };
         
-        var chunk = "";
+        var chunk = '';
         self.socket.on('data', function(data) {
             chunk += data.toString();
             var frames = chunk.split('\0');
             if (frames.length > 1) {
-                chunk = frames.pop();
-            
+                chunk = frames.pop();            
                 for (var i=0;i<frames.length; i++) {
                     var frame = Frame.parse(frames[i]);
-                    self.emit(frame.command, frame);
+                    self.emit(frame.command, frame.getParam('frameID'), frame.getParam('result'));
                 }
             }
         });
                 
-        self.on('MESSAGE', function(frame) {
-            var frameID = frame.getParam('frameID');
-            if (this.subscribers[frameID]) {
-                var callback = this.subscribers[frameID];
-                delete this.subscribers[frameID];
-                return callback(frame);
+        self.on('ANSWER', function(frameID, result) {
+            if (self.subscribers[frameID]) {
+                var callback = self.subscribers[frameID];                
+                callback(null, result);
+	        delete this.subscribers[frameID];
+	        return;
+            }
+        });
+
+        self.on('ERROR', function(frameID, err) {
+            if (frameID) {
+                if (self.subscribers[frameID]) {
+                    var callback = self.subscribers[frameID];                    
+                    callback(err, null);
+		    delete self.subscribers[frameID];
+		    return;
+                }
+            } else {
+                if (self.subscribers['GlobalErrorHandler']) {
+                    var callback = self.subscribers['GlobalErrorHandler'];
+                    return callback(err, null);                    
+                }
             }
         });
         
@@ -171,6 +199,14 @@ Wallet.prototype.disconnect = function(callback) {
     this.socket.write(frame.getBytes());
 }
 
+Wallet.prototype.onerror = function(callback) {
+    this.subscribers['GlobalErrorHandler'] = callback;
+}
+
+
+/*
+ Frame
+*/
 
 var Frame = module.exports.Frame = function(command) {
     if (this instanceof Frame) {
@@ -211,5 +247,136 @@ Frame.parse = function(bytes) {
     return frame;    
 }
 
+/*
+ WalletShard 
+*/
+
+var WalletShard = module.exports.WalletShard = function(port, host, databases) {
+    var self = this;
+    
+    if (this instanceof WalletShard) {
+        if (!util.isArray(databases)) {
+            databases = [databases];
+        }
+        this.shards = [];
+        databases.forEach(function(database) {
+            self.shards.push(new Wallet(port, host, database));
+        });
+    } else {
+        return new WalletShard(port, host, databases);
+    }
+}
 
 
+WalletShard.prototype.connect = function(callback) {
+    var self = this;
+    var counter = 0;
+    this.shards.forEach(function(shard) {
+        shard.connect(function(err, result) {
+            if (err) return callback(err, null);
+            if (++counter === self.shards.length) {
+                return callback(null, result);
+            }
+        });
+    });
+}
+
+WalletShard.prototype.disconnect = function(callback) {
+    var self = this;
+    var counter = 0;
+    this.shards.forEach(function(shard) {
+        shard.disconnect(function(err, result) {
+            if (err) return callback(err, null);
+            if (++counter === self.shards.length) {
+                return callback(null, result);
+            }
+        });
+    });
+}
+
+
+WalletShard.prototype.set = function(key, value, callback) {
+    var index = hashCode(key) % this.shards.length;    
+    this.shards[index].set(key, value, callback);    
+}
+
+WalletShard.prototype.get = function(key, callback) {
+    var index = hashCode(key) % this.shards.length;
+    this.shards[index].get(key, callback);    
+}
+
+
+WalletShard.prototype.exists = function(key, callback) {
+    var index = hashCode(key) % this.shards.length;
+    this.shards[index].exists(key, callback);    
+}
+
+
+WalletShard.prototype.remove = function(key, callback) {
+    var index = hashCode(key) % this.shards.length;
+    this.shards[index].remove(key, callback);    
+}
+
+WalletShard.prototype.count = function(callback) {
+    var self = this;
+    var counter = 0;
+    var count = 0;
+    this.shards.forEach(function(shard) {
+        shard.count(function(err, result) {
+            if (err) return callback(err, null);
+            count += parseInt(result);            
+            if (++counter === self.shards.length) {
+                return callback(null, count);
+            }
+        })
+    });
+}
+
+
+
+WalletShard.prototype.start = function(callback) {
+    var self = this;
+    var counter = 0;
+    this.shards.forEach(function(shard) {
+        shard.start(function(err, result) {
+            if (err) return callback(err, null);
+            if (++counter === self.shards.length) {
+                return callback(null, result);
+            }
+        })
+    });
+}
+
+WalletShard.prototype.commit = function(callback) {
+    var self = this;
+    var counter = 0;
+    this.shards.forEach(function(shard) {
+        shard.commit(function(err, result) {            
+            if (err) return callback(err, null);
+            if (++counter === self.shards.length) {
+                return callback(null, result);
+            }
+        })
+    });    
+}
+
+WalletShard.prototype.rollback = function(callback) {
+    var self = this;
+    var counter = 0;
+    this.shards.forEach(function(shard) {
+        shard.rollback(function(err, result) {
+            if (err) return callback(err, null);
+            if (++counter === self.shards.length) {
+                return callback(null, result);
+            }
+        })
+    });
+}
+
+
+WalletShard.prototype.onerror = function(callback) {
+    var self = this;
+    this.shards.forEach(function(shard) {
+        shard.onerror(callback);
+    });    
+}
