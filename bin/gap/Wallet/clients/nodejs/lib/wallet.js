@@ -56,7 +56,7 @@ Wallet.prototype.connect = function(callback) {
             chunk += data.toString();
             var frames = chunk.split('\0');
             if (frames.length > 1) {
-                chunk = frames.pop() + '\0';            
+                chunk = frames.pop();            
                 for (var i=0;i<frames.length; i++) {
                     var frame = Frame.parse(frames[i]);
                     self.emit(frame.command, frame.getParam('frameID'), frame.getParam('result'));
@@ -67,8 +67,9 @@ Wallet.prototype.connect = function(callback) {
         self.on('ANSWER', function(frameID, result) {
             if (self.subscribers[frameID]) {
                 var callback = self.subscribers[frameID];                
-	        delete self.subscribers[frameID];
-	        return callback(null, result);
+                callback(null, result);
+	        delete this.subscribers[frameID];
+	        return;
             }
         });
 
@@ -76,8 +77,9 @@ Wallet.prototype.connect = function(callback) {
             if (frameID) {
                 if (self.subscribers[frameID]) {
                     var callback = self.subscribers[frameID];                    
+                    callback(err, null);
 		    delete self.subscribers[frameID];
-		    return callback(err, null);
+		    return;
                 }
             } else {
                 if (self.subscribers['GlobalErrorHandler']) {

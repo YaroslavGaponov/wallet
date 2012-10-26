@@ -9,26 +9,22 @@ import java.nio.charset.CharsetDecoder;
 import java.util.*;
 
 public abstract class SocketServer {
-
 	private final static int DEFAULT_BUFFER_SIZE = 16384;
-	private final ByteBuffer buffer;
-
 	private final Selector selector;
 	private final ServerSocketChannel ssc;
+	private final int buffersize;
 
 	public SocketServer(int port) throws IOException {
 		this(port, DEFAULT_BUFFER_SIZE);
 	}
 
 	public SocketServer(int port, int buffersize) throws IOException {
-
-		buffer = ByteBuffer.allocate(buffersize);
-
 		ssc = ServerSocketChannel.open();
 		ssc.configureBlocking(false);
 		ssc.socket().bind(new InetSocketAddress(port));
 		selector = Selector.open();
 		ssc.register(selector, SelectionKey.OP_ACCEPT);
+		this.buffersize = buffersize;
 	}
 
 	public void start() throws IOException {
@@ -56,34 +52,32 @@ public abstract class SocketServer {
 							
 							try {
 							
-								Attachment attachment = (Attachment) key.attachment();
+								IOBuffers attachment = (IOBuffers) key.attachment();
 								if (attachment == null) {
-									attachment = new Attachment();
+									attachment = new IOBuffers(buffersize, buffersize);
 									key.attach(attachment);
 								}
 								
-								SocketChannel sc  = (SocketChannel) key.channel();
-								sc.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+								SocketChannel sc = (SocketChannel) key.channel();
 								
-								buffer.clear();
-								if (attachment.in.length() > 0) {
-									buffer.put(attachment.in.toString().getBytes());
+								sc.read(attachment.in);
+								attachment.in.flip();
+				
+								StringBuilder sb = new StringBuilder();
+								while (attachment.in.remaining() > 0) {
+									char ch = (char) attachment.in.get();
+									
+									sb.append(ch);
+									if (ch == '\0') {
+										byte[] response = handler(sb.toString().getBytes());
+										attachment.out.put(response);
+										sb.setLength(0);
+										key.interestOps(SelectionKey.OP_WRITE);
+									}	
 								}
-								sc.read(buffer);
-								buffer.flip();
-		
-								 Charset charset = Charset.defaultCharset();  
-							     CharsetDecoder decoder = charset.newDecoder();  
-							     CharBuffer charBuffer = decoder.decode(buffer); 
 								
-								attachment.in.setLength(0);
-								for (int i=0; i<charBuffer.limit(); i++) {
-									attachment.in.append( charBuffer.get(i));
-									if ( charBuffer.get(i) == '\0') {
-										attachment.out.append(handler(attachment.in.toString()));
-										attachment.in.setLength(0);
-									}							
-								}
+								attachment.in.clear();
+								attachment.in.put(sb.toString().getBytes());				
 							
 							} catch (IOException ex) {
 								key.cancel();
@@ -92,15 +86,13 @@ public abstract class SocketServer {
 							
 							
 						} else if (key.isWritable()) {	
-							
 							try {							
-								
-								Attachment attachment = (Attachment) key.attachment();
-								if (attachment != null && attachment.out.length() > 0) {	
-									SocketChannel sc  = (SocketChannel) key.channel();															
-									sc.write(ByteBuffer.wrap(attachment.out.toString().getBytes()));
-									attachment.out.setLength(0);
-								}
+								IOBuffers attachment = (IOBuffers) key.attachment();						
+								SocketChannel sc  = (SocketChannel) key.channel();	
+								attachment.out.flip();
+								sc.write(attachment.out);
+								attachment.out.clear();
+								key.interestOps(SelectionKey.OP_READ);
 								
 							} catch (IOException ex) {
 								key.cancel();
@@ -140,6 +132,6 @@ public abstract class SocketServer {
 
 	}
 
-	public abstract String handler(String request);
+	public abstract byte[] handler(byte[] request);
 
 }

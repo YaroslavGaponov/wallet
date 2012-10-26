@@ -28,8 +28,8 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		this.path = new File(path).getAbsolutePath() + '/';
 	}
 
-	public String handler(String request) {		
-		Frame requestFrame = Frame.parse(request);
+	public byte[] handler(byte[] request) {		
+		Frame requestFrame = Frame.parse(new String(request));
 
 		Frame responseFrame = null;
 		try {
@@ -37,7 +37,7 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 				case CONNECT:
 					responseFrame = connect(requestFrame);
 					break;
-				case SET:
+				case SET:	
 					responseFrame = set(requestFrame);
 					break;
 				case GET:
@@ -65,18 +65,18 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 					responseFrame = disconnect(requestFrame);
 					break;
 			default:
-				break;
+				throw new WalletException("Command is not supported");
 			}		
 			
 			// return frameID back
 			String frameId = requestFrame.getParam("frameID"); 
 			responseFrame.addParam("frameID", frameId);
-						
-			return responseFrame.toString();
+			
+			return responseFrame.toString().getBytes();
 		} catch (WalletException ex) {
 			responseFrame = new Frame(Command.ERROR);
 			responseFrame.addParam("result", ex.getMessage());
-			return responseFrame.toString(); 
+			return responseFrame.toString().getBytes(); 
 		}
 	}
 	
