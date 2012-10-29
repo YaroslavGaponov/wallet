@@ -1,4 +1,4 @@
-package com.gap.Wallet.util;
+package com.gap.Wallet.Util;
 
 import com.gap.Wallet.Storage.StorageDriver;
 import com.gap.Wallet.Storage.WalletException;
@@ -17,7 +17,7 @@ public class rebuild {
 		System.out.println("wallet - rebuild tool");
 		
 		if (args.length != 1) {
-			System.out.println("rebuild {database}");
+			System.out.println("rebuild database");
 			return;
 		}
 		

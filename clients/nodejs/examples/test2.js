@@ -1,3 +1,13 @@
+/*
+# Preconditions
+1. create database file: 
+	java -jar ./bin/build.jar ./data/test 1000000
+2. run database server:
+	java -jar ./bin/wallet.jar 12345 ./data
+3. run script:
+	node test.js
+*/
+
 
 var w = require('../lib/wallet');
 

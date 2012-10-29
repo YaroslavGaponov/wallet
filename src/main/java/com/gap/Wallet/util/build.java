@@ -1,4 +1,4 @@
-package com.gap.Wallet.util;
+package com.gap.Wallet.Util;
 
 import java.util.Date;
 
@@ -13,7 +13,7 @@ public class build {
 	public static void main(String[] args) {
 		System.out.println("wallet - build");
 		if (args.length != 2) {
-			System.out.println("build {database} {rows}");
+			System.out.println("build database records");
 			return;
 		}
 

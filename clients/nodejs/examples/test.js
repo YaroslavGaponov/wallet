@@ -1,5 +1,14 @@
+/*
+# Preconditions
+1. create database file: 
+	java -jar ./bin/build.jar ./data/test 1000000
+2. run database server:
+	java -jar ./bin/wallet.jar 12345 ./data
+*/
 
 var w = require('../lib/wallet');
+
+var size = 10000;
 
 var client = w.Wallet(12345, 'localhost', 'test');
 
@@ -16,11 +25,13 @@ client.connect(function(err, sessionID) {
         console.log('count = ' + recs); 
 
 	console.log('inserting ...');
-        for (var i=0;i<1000000;i++) {
+	var counter = 0;
+        for (var i=0;i<size;i++) {
             (function(n) {
-                client.set('key #' + n, 'value #' + n, function(err, status) {                    
-		    if ((n % 10000) == 0) console.log(n + ' records inserted');
-                    if (n == 999999) {
+                client.set('key #' + n, 'value #' + n, function(err, status) {
+		    counter++;
+		    if ((counter % (size>>2)) == 0) console.log(counter + ' records inserted');
+                    if (counter == size) {
                             client.count(function(err, recs) {
                                 console.log('count = ' + recs);
                                 client.disconnect(function() {

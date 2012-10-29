@@ -1,4 +1,4 @@
-package com.gap.Wallet.Server;
+package com.gap.Wallet.NetServer;
 
 import java.io.*;
 import java.net.*;
@@ -6,7 +6,7 @@ import java.nio.channels.*;
 import java.util.*;
 
 public abstract class SocketServer {
-	private final static int DEFAULT_BUFFER_SIZE = 16384;
+	private final static int DEFAULT_BUFFER_SIZE = 16384; // max frame size!!! 
 	private final Selector selector;
 	private final ServerSocketChannel ssc;
 	private final int buffersize;
@@ -27,9 +27,9 @@ public abstract class SocketServer {
 	public void start() throws IOException {
 		try {
 			while (true) {
-				int num = selector.select();
+				int changes = selector.select();
 
-				if (num == 0) {
+				if (changes == 0) {
 					continue;
 				}
 
@@ -49,32 +49,40 @@ public abstract class SocketServer {
 							
 							try {
 							
-								IOBuffers attachment = (IOBuffers) key.attachment();
+								// get io buffer
+								Attach attachment = (Attach) key.attachment();
 								if (attachment == null) {
-									attachment = new IOBuffers(buffersize, buffersize);
+									attachment = new Attach(buffersize, buffersize);
 									key.attach(attachment);
 								}
 								
 								SocketChannel sc = (SocketChannel) key.channel();
-								
+
+								// add new data to in buffer
 								sc.read(attachment.in);
 								attachment.in.flip();
 				
 								StringBuilder sb = new StringBuilder();
 								while (attachment.in.remaining() > 0) {
-									char ch = (char) attachment.in.get();
-									
+									char ch = (char) attachment.in.get();									
 									sb.append(ch);
 									if (ch == '\0') {
 										byte[] response = handler(sb.toString().getBytes());
 										attachment.out.put(response);
-										sb.setLength(0);
-										key.interestOps(SelectionKey.OP_WRITE);
+										sb.setLength(0);										
 									}	
 								}
 								
+								// tail save to in buffer
 								attachment.in.clear();
-								attachment.in.put(sb.toString().getBytes());				
+								attachment.in.put(sb.toString().getBytes());
+								
+								
+								// if something is at out buffer - send immediately
+								if (attachment.out.position() > 0) { 
+									key.interestOps(SelectionKey.OP_WRITE);
+								}
+								
 							
 							} catch (IOException ex) {
 								key.cancel();
@@ -84,7 +92,7 @@ public abstract class SocketServer {
 							
 						} else if (key.isWritable()) {	
 							try {							
-								IOBuffers attachment = (IOBuffers) key.attachment();						
+								Attach attachment = (Attach) key.attachment();						
 								SocketChannel sc  = (SocketChannel) key.channel();	
 								attachment.out.flip();
 								sc.write(attachment.out);

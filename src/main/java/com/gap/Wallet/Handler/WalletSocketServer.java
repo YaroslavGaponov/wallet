@@ -1,4 +1,4 @@
-package com.gap.Wallet.deamon;
+package com.gap.Wallet.Handler;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,13 +6,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.gap.Wallet.Server.Frame;
-import com.gap.Wallet.Server.SocketServer;
-import com.gap.Wallet.Server.Frame.Command;
+import com.gap.Wallet.NetServer.Frame;
+import com.gap.Wallet.NetServer.SocketServer;
+import com.gap.Wallet.NetServer.Frame.Command;
 import com.gap.Wallet.Storage.StorageSession;
 import com.gap.Wallet.Storage.WalletException;
 
-public class WalletSocketServer extends SocketServer implements Runnable {
+public class WalletSocketServer extends SocketServer {
 	
 	private final static int DEFAULT_PORT = 3678;
 	private final Map<String, StorageSession> sessions = new HashMap<String, StorageSession>();
@@ -69,8 +69,10 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 			}		
 			
 			// return frameID back
-			String frameId = requestFrame.getParam("frameID"); 
-			responseFrame.addParam("frameID", frameId);
+			String id = requestFrame.getParam("id");
+			if (id != null) {
+				responseFrame.addParam("id", id);
+			}
 			
 			return responseFrame.toString().getBytes();
 		} catch (WalletException ex) {
@@ -176,14 +178,6 @@ public class WalletSocketServer extends SocketServer implements Runnable {
 		Frame response = new Frame(Command.ANSWER);
 		response.addParam("result", ((Boolean)(true)).toString());
 		return response;
-	}
-
-	public void run() {
-		try {
-			start();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}		
 	}
 
 }

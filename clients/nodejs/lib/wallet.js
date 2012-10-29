@@ -4,18 +4,10 @@ var net = require('net');
 var ee = require('events').EventEmitter;
 
 
+// create id
+var id = 0;
 function getId() {
-    return 'id' + Math.floor(Math.random() * 999999999999999999999);
-}
-
-
-function hashCode(key) {
-    var hash = 0;
-    for (var i=0; i<key.length; i++) {
-        hash = ((hash << 5) - hash) + key.charCodeAt(i);
-        hash = hash & hash;
-    }    
-    return hash & 0xffff;
+    return 'id' + id++;
 }
 
 /*
@@ -23,6 +15,7 @@ function hashCode(key) {
 */
 var Wallet = module.exports.Wallet = function(port, host, database) {
     if (this instanceof Wallet) {
+	this.database = database;
         this.port = port || '3678';
         this.host = host || '0.0.0.0';
         this.database = database || 'wallet';
@@ -41,14 +34,14 @@ Wallet.prototype.connect = function(callback) {
     this.socket.on('connect', function() {
                 
         var frame = Frame('CONNECT');
-        var frameId = getId();        
-        frame.addParam('frameID', frameId);
+        var id = getId();        
+        frame.addParam('id', id);
         frame.addParam('database', self.database);        
         self.socket.write(frame.getBytes());
                 
-        self.subscribers[frameId] = function(err, result) {
-            self.session = result;
-            return callback(err, result);
+        self.subscribers[id] = function(err, sessionId) {
+            self.session = sessionId;
+            return callback(err, sessionId);
         };
         
         var chunk = '';
@@ -56,27 +49,27 @@ Wallet.prototype.connect = function(callback) {
             chunk += data.toString();
             var frames = chunk.split('\0');
             if (frames.length > 1) {
-                chunk = frames.pop() + '\0';            
+                chunk = frames.pop();            
                 for (var i=0;i<frames.length; i++) {
                     var frame = Frame.parse(frames[i]);
-                    self.emit(frame.command, frame.getParam('frameID'), frame.getParam('result'));
+                    self.emit(frame.command, frame.getParam('id'), frame.getParam('result'));
                 }
             }
         });
                 
-        self.on('ANSWER', function(frameID, result) {
-            if (self.subscribers[frameID]) {
-                var callback = self.subscribers[frameID];                
-	        delete self.subscribers[frameID];
+        self.on('ANSWER', function(id, result) {
+            if (self.subscribers[id]) {
+                var callback = self.subscribers[id];                
+	        delete self.subscribers[id];
 	        return callback(null, result);
-            }
+            } 
         });
 
-        self.on('ERROR', function(frameID, err) {
-            if (frameID) {
-                if (self.subscribers[frameID]) {
-                    var callback = self.subscribers[frameID];                    
-		    delete self.subscribers[frameID];
+        self.on('ERROR', function(id, err) {
+            if (id) {
+                if (self.subscribers[id]) {
+                    var callback = self.subscribers[id];                    
+		    delete self.subscribers[id];
 		    return callback(err, null);
                 }
             } else {
@@ -92,108 +85,108 @@ Wallet.prototype.connect = function(callback) {
 
 
 Wallet.prototype.set = function(key, value, callback) {
-    var frameId = getId();
-    if (typeof callback === 'function') {
-        this.subscribers[frameId] = callback;
-    }
     var frame = new Frame('SET');
-    frame.addParam('frameID', frameId);
     frame.addParam('session', this.session);
+    if (typeof callback === 'function') {
+	var id = getId();
+        this.subscribers[id] = callback;
+	frame.addParam('id', id);
+    }            
     frame.addParam('key', key);
     frame.addParam('value', value);
     this.socket.write(frame.getBytes());
 }
 
 Wallet.prototype.get = function(key, callback) {
-    var frameId = getId();
-    if (typeof callback === 'function') {
-        this.subscribers[frameId] = callback;
-    }
     var frame = new Frame('GET');
-    frame.addParam('frameID', frameId);
     frame.addParam('session', this.session);
+    if (typeof callback === 'function') {
+	var id = getId();
+        this.subscribers[id] = callback;
+	frame.addParam('id', id);
+    }        
     frame.addParam('key', key);
     this.socket.write(frame.getBytes());
 }
 
 Wallet.prototype.exists = function(key, callback) {
-    var frameId = getId();
-    if (typeof callback === 'function') {
-        this.subscribers[frameId] = callback;
-    }
     var frame = new Frame('EXISTS');
-    frame.addParam('frameID', frameId);
     frame.addParam('session', this.session);
+    if (typeof callback === 'function') {
+	var id = getId();
+        this.subscribers[id] = callback;
+	frame.addParam('id', id);
+    }        
     frame.addParam('key', key);
     this.socket.write(frame.getBytes());
 }
 
 
 Wallet.prototype.remove = function(key, callback) {
-    var frameId = getId();
-    if (typeof callback === 'function') {
-        this.subscribers[frameId] = callback;
-    }
     var frame = new Frame('REMOVE');
-    frame.addParam('frameID', frameId);
     frame.addParam('session', this.session);
+    if (typeof callback === 'function') {
+	var id = getId();
+        this.subscribers[id] = callback;
+	frame.addParam('id', id);
+    }        
     frame.addParam('key', key);
     this.socket.write(frame.getBytes());
 }
 
 Wallet.prototype.count = function(callback) {
-    var frameId = getId();
-    if (typeof callback === 'function') {
-        this.subscribers[frameId] = callback;
-    }
     var frame = new Frame('COUNT');
-    frame.addParam('frameID', frameId);
     frame.addParam('session', this.session);
+    if (typeof callback === 'function') {
+	var id = getId();
+        this.subscribers[id] = callback;
+	frame.addParam('id', id);
+    }        
     this.socket.write(frame.getBytes());
 }
 
 Wallet.prototype.start = function(callback) {
-    var frameId = getId();
-    if (typeof callback === 'function') {
-        this.subscribers[frameId] = callback;
-    }
     var frame = new Frame('START');
-    frame.addParam('frameID', frameId);
     frame.addParam('session', this.session);
+    if (typeof callback === 'function') {
+	var id = getId();
+        this.subscribers[id] = callback;
+	frame.addParam('id', id);
+    }        
     this.socket.write(frame.getBytes());
 }
 
 Wallet.prototype.commit = function(callback) {
-    var frameId = getId();
-    if (typeof callback === 'function') {
-        this.subscribers[frameId] = callback;
-    }
     var frame = new Frame('COMMIT');
-    frame.addParam('frameID', frameId);
     frame.addParam('session', this.session);
+    if (typeof callback === 'function') {
+	var id = getId();
+        this.subscribers[id] = callback;
+	frame.addParam('id', id);
+    }        
     this.socket.write(frame.getBytes());
 }
 
 Wallet.prototype.rollback = function(callback) {
-    var frameId = getId();
-    if (typeof callback === 'function') {
-        this.subscribers[frameId] = callback;
-    }
     var frame = new Frame('ROLLBACK');
-    frame.addParam('frameID', frameId);
     frame.addParam('session', this.session);
+    if (typeof callback === 'function') {
+	var id = getId();
+        this.subscribers[id] = callback;
+	frame.addParam('id', id);
+    }        
     this.socket.write(frame.getBytes());
 }
 
 
 Wallet.prototype.disconnect = function(callback) {
-    var frameId = getId();
-    if (typeof callback === 'function') {
-        this.subscribers[frameId] = callback;
-    }
     var frame = new Frame('DISCONNECT');
-    frame.addParam('frameID', frameId);
     frame.addParam('session', this.session);
+    if (typeof callback === 'function') {
+	var id = getId();
+        this.subscribers[id] = callback;
+	frame.addParam('id', id);
+    }            
     this.socket.write(frame.getBytes());
 }
 
@@ -248,7 +241,6 @@ Frame.parse = function(bytes) {
 /*
  WalletShard 
 */
-
 var WalletShard = module.exports.WalletShard = function(port, host, databases) {
     var self = this;
     
@@ -265,6 +257,15 @@ var WalletShard = module.exports.WalletShard = function(port, host, databases) {
     }
 }
 
+
+WalletShard.hashCode = function (key) {
+    var hash = 0;
+    for (var i=0; i<key.length; i++) {
+        hash = ((hash << 5) - hash) + key.charCodeAt(i);
+        hash = hash & hash;
+    }    
+    return hash & 0xffff;
+}
 
 WalletShard.prototype.connect = function(callback) {
     var self = this;
@@ -294,24 +295,24 @@ WalletShard.prototype.disconnect = function(callback) {
 
 
 WalletShard.prototype.set = function(key, value, callback) {
-    var index = hashCode(key) % this.shards.length;    
+    var index = WalletShard.hashCode(key) % this.shards.length;    
     this.shards[index].set(key, value, callback);    
 }
 
 WalletShard.prototype.get = function(key, callback) {
-    var index = hashCode(key) % this.shards.length;
+    var index = WalletShard.hashCode(key) % this.shards.length;
     this.shards[index].get(key, callback);    
 }
 
 
 WalletShard.prototype.exists = function(key, callback) {
-    var index = hashCode(key) % this.shards.length;
+    var index = WalletShard.hashCode(key) % this.shards.length;
     this.shards[index].exists(key, callback);    
 }
 
 
 WalletShard.prototype.remove = function(key, callback) {
-    var index = hashCode(key) % this.shards.length;
+    var index = WalletShard.hashCode(key) % this.shards.length;
     this.shards[index].remove(key, callback);    
 }
 
@@ -378,3 +379,5 @@ WalletShard.prototype.onerror = function(callback) {
         shard.onerror(callback);
     });    
 }
+
+

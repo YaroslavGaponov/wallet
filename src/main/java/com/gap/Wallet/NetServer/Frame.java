@@ -1,4 +1,4 @@
-package com.gap.Wallet.Server;
+package com.gap.Wallet.NetServer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,13 +36,13 @@ public class Frame {
 	}
 
 	public String toString() {
-		StringBuilder s = new StringBuilder();
-		s.append(command.toString() + "\n");
+		StringBuilder sb = new StringBuilder();
+		sb.append(command.toString() + '\n');
 		for (String key : params.keySet()) {
-			s.append(key + ":" + params.get(key) + "\n");
+			sb.append(key + ':' + params.get(key) + '\n');
 		}
-		s.append('\0');
-		return s.toString();
+		sb.append('\0');
+		return sb.toString();
 	}
 
 	public static Frame parse(String data) {
@@ -53,7 +53,7 @@ public class Frame {
 			String kv[] = lines[i].split(":");
 			if (kv.length == 2) {
 				frame.params.put(kv[0], kv[1]);
-			}
+			} 
 		}
 		return frame;
 	}
