@@ -1,9 +1,9 @@
-package com.gap.Wallet.Util;
+package com.gap.wallet.util;
 
 import java.util.Date;
 
-import com.gap.Wallet.copyright;
-import com.gap.Wallet.Storage.StorageDriver;
+import com.gap.wallet.copyright;
+import com.gap.wallet.storage.StorageDriver;
 
 public class build {
 

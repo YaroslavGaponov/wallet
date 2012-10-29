@@ -1,4 +1,4 @@
-package com.gap.Wallet;
+package com.gap.wallet;
 
 public interface copyright {
 	public final String name = "wallet";

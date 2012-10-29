@@ -1,4 +1,4 @@
-package com.gap.Wallet.Storage;
+package com.gap.wallet.storage;
 
 
 public interface IWalletStorage {

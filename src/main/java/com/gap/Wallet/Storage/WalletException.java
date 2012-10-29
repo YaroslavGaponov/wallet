@@ -1,4 +1,4 @@
-package com.gap.Wallet.Storage;
+package com.gap.wallet.storage;
 
 public class WalletException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

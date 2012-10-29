@@ -1,4 +1,4 @@
-package com.gap.Wallet.NetServer;
+package com.gap.wallet.netserver;
 
 import java.io.*;
 import java.net.*;

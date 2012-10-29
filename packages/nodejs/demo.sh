@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir data
+
 java -jar ./bin/build.jar ./data/test 1000000
 
 java -jar ./bin/build.jar ./data/test1 1000000

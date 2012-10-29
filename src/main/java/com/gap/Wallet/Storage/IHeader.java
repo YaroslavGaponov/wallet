@@ -1,4 +1,4 @@
-package com.gap.Wallet.Storage;
+package com.gap.wallet.storage;
 interface IHeader {
 	public final long Identifier = 0x5B57414C4C45545DL;
 	

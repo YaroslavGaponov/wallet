@@ -1,8 +1,8 @@
-package com.gap.Wallet.Util;
+package com.gap.wallet.util;
 
-import com.gap.Wallet.copyright;
-import com.gap.Wallet.Storage.StorageDriver;
-import com.gap.Wallet.Storage.WalletException;
+import com.gap.wallet.copyright;
+import com.gap.wallet.storage.StorageDriver;
+import com.gap.wallet.storage.WalletException;
 
 import java.io.IOException;
 import java.util.Date;

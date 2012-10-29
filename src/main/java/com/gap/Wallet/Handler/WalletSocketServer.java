@@ -1,4 +1,4 @@
-package com.gap.Wallet.Handler;
+package com.gap.wallet.handler;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,11 +6,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.gap.Wallet.NetServer.Frame;
-import com.gap.Wallet.NetServer.SocketServer;
-import com.gap.Wallet.NetServer.Command;
-import com.gap.Wallet.Storage.StorageSession;
-import com.gap.Wallet.Storage.WalletException;
+import com.gap.wallet.netserver.Frame;
+import com.gap.wallet.netserver.SocketServer;
+import com.gap.wallet.netserver.Command;
+import com.gap.wallet.storage.StorageSession;
+import com.gap.wallet.storage.WalletException;
 
 public class WalletSocketServer extends SocketServer {
 	

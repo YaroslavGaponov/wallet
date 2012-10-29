@@ -1,8 +1,8 @@
-package com.gap.Wallet;
+package com.gap.wallet;
 
 import java.io.IOException;
 
-import com.gap.Wallet.Deamon.Daemon;
+import com.gap.wallet.deamon.Daemon;
 
 public class Wallet {
 

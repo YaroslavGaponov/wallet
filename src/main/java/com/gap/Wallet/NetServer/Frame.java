@@ -1,4 +1,4 @@
-package com.gap.Wallet.NetServer;
+package com.gap.wallet.netserver;
 
 import java.util.HashMap;
 import java.util.Map;
