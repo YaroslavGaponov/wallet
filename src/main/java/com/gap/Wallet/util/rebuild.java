@@ -1,5 +1,6 @@
 package com.gap.Wallet.Util;
 
+import com.gap.Wallet.copyright;
 import com.gap.Wallet.Storage.StorageDriver;
 import com.gap.Wallet.Storage.WalletException;
 
@@ -14,10 +15,11 @@ public class rebuild {
 	}
 	
 	public static void main(String[] args) throws WalletException, IOException {
-		System.out.println("wallet - rebuild tool");
+		System.out.println(copyright.info);
+		System.out.println("rebuild tool");
 		
 		if (args.length != 1) {
-			System.out.println("rebuild [database]");
+			System.out.println("help: rebuild [database]");
 			return;
 		}
 		

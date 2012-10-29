@@ -108,13 +108,9 @@ public class StorageSession implements IWalletStorage, ITransaction {
 			}
 			
 			// if we worked early
-			switch (operation.get(hash)) {
-				case set:				
-					byte[] value = values.get(hash);
-					return value;				
-				case remove:
-					return null;
-			}
+			return 
+				operation.get(hash) == Operation.set 
+					?  values.get(hash) :  null;
 		}
 		
 		return session.get(key);
@@ -177,9 +173,8 @@ public class StorageSession implements IWalletStorage, ITransaction {
 
 	public long count() {
 		return 
-				transaction 
-				? 
-				counter : session.count();
+			transaction 
+				? counter : session.count();
 	}
 
 	public void close() {

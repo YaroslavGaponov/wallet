@@ -7,10 +7,11 @@ import com.gap.Wallet.Deamon.Daemon;
 public class Wallet {
 
 	public static void main(String[] args) throws IOException {
+		System.out.println(copyright.info);
 		System.out.println("wallet - demon");
 		
 		if (args.length != 2) {
-			halt("wallet [port] [path]");
+			halt("help: wallet [port] [path]");
 		}
 							
 		int port = 0;

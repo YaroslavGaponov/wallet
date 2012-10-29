@@ -8,16 +8,16 @@ import java.util.UUID;
 
 import com.gap.Wallet.NetServer.Frame;
 import com.gap.Wallet.NetServer.SocketServer;
-import com.gap.Wallet.NetServer.Frame.Command;
+import com.gap.Wallet.NetServer.Command;
 import com.gap.Wallet.Storage.StorageSession;
 import com.gap.Wallet.Storage.WalletException;
 
 public class WalletSocketServer extends SocketServer {
 	
-	private final static int DEFAULT_PORT = 3678;
+	private final static int DEFAULT_PORT = 12345;
 	private final Map<String, StorageSession> sessions = new HashMap<String, StorageSession>();
 
-	private String path;
+	private final String path;
 
 	public WalletSocketServer(String path) throws IOException {
 		this(DEFAULT_PORT, path);
@@ -30,7 +30,9 @@ public class WalletSocketServer extends SocketServer {
 
 	public byte[] handler(byte[] request) {		
 		Frame requestFrame = Frame.parse(new String(request));
-
+		
+		assert(request != null);
+				
 		Frame responseFrame = null;
 		try {
 			switch (requestFrame.getCommand()) {
@@ -65,10 +67,10 @@ public class WalletSocketServer extends SocketServer {
 					responseFrame = disconnect(requestFrame);
 					break;
 			default:
-				throw new WalletException("Command is not supported");
+				throw new WalletException("Command is not supported.");
 			}		
 			
-			// return frameID back
+			// return id back
 			String id = requestFrame.getParam("id");
 			if (id != null) {
 				responseFrame.addParam("id", id);
@@ -76,108 +78,153 @@ public class WalletSocketServer extends SocketServer {
 			
 			return responseFrame.toString().getBytes();
 		} catch (WalletException ex) {
-			responseFrame = new Frame(Command.ERROR);
-			responseFrame.addParam("result", ex.getMessage());
-			return responseFrame.toString().getBytes(); 
+			return
+				Frame
+					.createFrame(Command.ERROR)
+						.addParam("result", ex.getMessage())
+						.addParam("id",  requestFrame.getParam("id") != null ? requestFrame.getParam("id") : null)
+							.toString()
+								.getBytes();
 		}
 	}
 	
-		
 	private Frame connect(Frame request) {
 		String database = request.getParam("database");
+		assert(database != null);
+		
 		String session = UUID.randomUUID().toString();
 		sessions.put(session, new StorageSession(path + database));
+				
 		
-		Frame response = new Frame(Command.ANSWER);
-		response.addParam("result", session.toString());
-		return response;
+		return 
+			Frame
+				.createFrame(Command.ANSWER)
+					.addParam("result", session.toString());		
 	}
 
 	private Frame set(Frame request) {
 		String session = request.getParam("session");
+		assert(session != null);
+		
 		String key = request.getParam("key");
+		assert(key != null);
+		
 		String value = request.getParam("value");
 		Boolean res = sessions.get(session).set(key.getBytes(), value.getBytes());
-				
-		Frame response = new Frame(Command.ANSWER);
-		response.addParam("result", res.toString());
-		return response;
+						
+		return 
+				Frame
+					.createFrame(Command.ANSWER)
+						.addParam("result", res.toString());		
+		
 	}
 
 	private Frame exists(Frame request) {
 		String session = request.getParam("session");
+		assert(session != null);
+		
 		String key = request.getParam("key");
+		assert(key != null);
+		
 		Boolean res = sessions.get(session).exists(key.getBytes());
 		
-		Frame response = new Frame(Command.ANSWER);
-		response.addParam("result", res.toString());
-		return response;
+		return 
+				Frame
+					.createFrame(Command.ANSWER)
+						.addParam("result", res.toString());
 	}
 
 	private Frame count(Frame request) {
 		String session = request.getParam("session");
+		assert(session != null);
+		
 		Long count = sessions.get(session).count();
 
-		Frame response = new Frame(Command.ANSWER);
-		response.addParam("result", count.toString());
-		return response;		
+		return 
+				Frame
+					.createFrame(Command.ANSWER)
+						.addParam("result", count.toString());		
+		
 	}
 
 	private Frame get(Frame request) {
 		String session = request.getParam("session");
-		String key = request.getParam("key");
-		byte[] value = sessions.get(session).get(key.getBytes());
+		assert(session != null);
 		
-		Frame response = new Frame(Command.ANSWER);
-		response.addParam("result", new String(value));
-		return response;		
+		String key = request.getParam("key");
+		assert(key != null);
+		
+		byte[] value = sessions.get(session).get(key.getBytes());
+				
+		return 
+				Frame
+					.createFrame(Command.ANSWER)
+						.addParam("result", new String(value));		
+		
 	}
 
 	private Frame remove(Frame request) {
 		String session = request.getParam("session");
+		assert(session != null);
+		
 		String key = request.getParam("key");
+		assert(key != null);
+		
 		Boolean res = sessions.get(session).remove(key.getBytes());
 		
-		Frame response = new Frame(Command.ANSWER);
-		response.addParam("result", res.toString());
-		return response;
+		return 
+				Frame
+					.createFrame(Command.ANSWER)
+						.addParam("result", res.toString());	
+				
 	}
 
 	private Frame start(Frame request) {
 		String session = request.getParam("session");
+		assert(session != null);
+		
 		sessions.get(session).start();
 		
-		Frame response = new Frame(Command.ANSWER);
-		response.addParam("result", ((Boolean)(true)).toString());
-		return response;
-
+		return 
+				Frame
+					.createFrame(Command.ANSWER)
+						.addParam("result", Boolean.TRUE.toString());	
 	}
 
 	private Frame commit(Frame request) {
 		String session = request.getParam("session");
+		assert(session != null);
+		
 		sessions.get(session).commit();
 		
-		Frame response = new Frame(Command.ANSWER);
-		response.addParam("result", ((Boolean)(true)).toString());
-		return response;
+		return 
+				Frame
+					.createFrame(Command.ANSWER)
+						.addParam("result", Boolean.TRUE.toString());	
 	}
 
 	private Frame rollback(Frame request) {
 		String session = request.getParam("session");
+		assert(session != null);
+		
 		sessions.get(session).rollback();
 		
-		Frame response = new Frame(Command.ANSWER);
-		response.addParam("result", ((Boolean)(true)).toString());
-		return response;
+		return 
+				Frame
+					.createFrame(Command.ANSWER)
+						.addParam("result", Boolean.TRUE.toString());	
 	}
 
 	private Frame disconnect(Frame request) {
 		String session = request.getParam("session");
+		assert(session != null);
+		
 		sessions.get(session).close();
 		
-		Frame response = new Frame(Command.ANSWER);
-		response.addParam("result", ((Boolean)(true)).toString());
-		return response;
+		return 
+				Frame
+					.createFrame(Command.ANSWER)
+						.addParam("result", Boolean.TRUE.toString());	
 	}
 
 }

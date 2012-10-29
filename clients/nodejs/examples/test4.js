@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
 # Preconditions
 1. create database files:

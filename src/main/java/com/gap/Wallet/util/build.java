@@ -2,6 +2,7 @@ package com.gap.Wallet.Util;
 
 import java.util.Date;
 
+import com.gap.Wallet.copyright;
 import com.gap.Wallet.Storage.StorageDriver;
 
 public class build {
@@ -11,9 +12,11 @@ public class build {
 	}
 	
 	public static void main(String[] args) {
-		System.out.println("wallet - build");
+		System.out.println(copyright.info);
+		System.out.println("build tool");
+		
 		if (args.length != 2) {
-			System.out.println("build [database] [records]");
+			System.out.println("help: build [database] [records]");
 			return;
 		}
 

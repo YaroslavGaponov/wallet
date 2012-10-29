@@ -137,6 +137,7 @@ public abstract class SocketServer {
 
 	}
 
+	// net protocol handler
 	public abstract byte[] handler(byte[] request);
 
 }
