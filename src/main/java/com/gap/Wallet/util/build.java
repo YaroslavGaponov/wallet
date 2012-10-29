@@ -13,7 +13,7 @@ public class build {
 	public static void main(String[] args) {
 		System.out.println("wallet - build");
 		if (args.length != 2) {
-			System.out.println("build database records");
+			System.out.println("build [database] [records]");
 			return;
 		}
 

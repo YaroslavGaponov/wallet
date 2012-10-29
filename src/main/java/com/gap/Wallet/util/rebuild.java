@@ -17,7 +17,7 @@ public class rebuild {
 		System.out.println("wallet - rebuild tool");
 		
 		if (args.length != 1) {
-			System.out.println("rebuild database");
+			System.out.println("rebuild [database]");
 			return;
 		}
 		
