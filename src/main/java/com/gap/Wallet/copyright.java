@@ -1,6 +1,6 @@
 package com.gap.wallet;
 
-public interface copyright {
+public interface Copyright {
 	public final String name = "wallet";
 	public final String description = "Wallet - nosql database server";	
 	public final String site = "https://github.com/YaroslavGaponov/wallet";

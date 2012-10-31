@@ -2,7 +2,7 @@ package com.gap.wallet.deamon;
 
 import java.io.IOException;
 
-import com.gap.wallet.handler.WalletSocketServer;
+import com.gap.wallet.core.WalletSocketServer;
 
 public class Daemon implements Runnable {
 	private final WalletSocketServer server;

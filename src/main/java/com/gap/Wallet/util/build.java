@@ -2,17 +2,17 @@ package com.gap.wallet.util;
 
 import java.util.Date;
 
-import com.gap.wallet.copyright;
-import com.gap.wallet.storage.StorageDriver;
+import com.gap.wallet.Copyright;
+import com.gap.wallet.storage.driver.Driver;
 
-public class build {
+public class Build {
 
 	private static void show(String message) {
 		System.out.println(new Date() + " " + message);
 	}
 	
 	public static void main(String[] args) {
-		System.out.println(copyright.info);
+		System.out.println(Copyright.info);
 		System.out.println("build tool");
 		
 		if (args.length != 2) {
@@ -24,7 +24,7 @@ public class build {
 		long records = Integer.parseInt(args[1]);
 		
 		show("creating ...");
-			StorageDriver.createStorage(filename, records);
+			Driver.createStorage(filename, records);
 		show("done");
 		
 	}

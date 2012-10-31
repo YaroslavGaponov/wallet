@@ -7,7 +7,7 @@ import com.gap.wallet.deamon.Daemon;
 public class Wallet {
 
 	public static void main(String[] args) throws IOException {
-		System.out.println(copyright.info);
+		System.out.println(Copyright.info);
 		System.out.println("wallet - demon");
 		
 		if (args.length != 2) {
