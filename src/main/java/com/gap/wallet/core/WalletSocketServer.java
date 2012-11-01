@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
+import com.gap.wallet.logger.Log;
 import com.gap.wallet.net.Command;
 import com.gap.wallet.net.Frame;
 import com.gap.wallet.net.SocketServer;
@@ -91,6 +91,8 @@ public class WalletSocketServer extends SocketServer {
 	private Frame connect(Frame request) {
 		String database = request.getParam("database");
 		assert(database != null);
+						
+		Log.logger.info("a new client is registered for database [" + database + "]");
 		
 		String session = UUID.randomUUID().toString();
 		WalletClient client = new WalletClient(path + database);
@@ -221,6 +223,8 @@ public class WalletSocketServer extends SocketServer {
 		assert(session != null);
 		
 		sessions.get(session).close();
+		
+		Log.logger.info("client is unregistered");
 		
 		return 
 				Frame

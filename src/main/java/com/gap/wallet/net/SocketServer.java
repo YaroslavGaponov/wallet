@@ -5,6 +5,8 @@ import java.net.*;
 import java.nio.channels.*;
 import java.util.*;
 
+import com.gap.wallet.logger.Log;
+
 public abstract class SocketServer {
 	private final static int DEFAULT_BUFFER_SIZE = 16384; // max frame size!!! 
 	private final Selector selector;
@@ -16,6 +18,8 @@ public abstract class SocketServer {
 	}
 
 	public SocketServer(int port, int buffersize) throws IOException {
+		Log.logger.info("socket server is starting on port " + port);
+		
 		ssc = ServerSocketChannel.open();
 		ssc.configureBlocking(false);
 		ssc.socket().bind(new InetSocketAddress(port));
@@ -25,7 +29,9 @@ public abstract class SocketServer {
 	}
 
 	public void start() throws IOException {
-		try {
+		Log.logger.info("socket server is started");
+		
+		try {									
 			while (true) {
 				int changes = selector.select();
 
@@ -40,6 +46,9 @@ public abstract class SocketServer {
 
 					if (key.isValid()) {
 						if (key.isAcceptable()) {
+							
+							Log.logger.info("new socket connection is accepted");
+							
 							Socket s = ssc.accept().socket();
 							SocketChannel sc = s.getChannel();
 							sc.configureBlocking(false);
@@ -49,7 +58,7 @@ public abstract class SocketServer {
 							
 							try {
 							
-								// get io buffer
+								// get i/o buffer
 								Attach attachment = (Attach) key.attachment();
 								if (attachment == null) {
 									attachment = new Attach(buffersize, buffersize);
