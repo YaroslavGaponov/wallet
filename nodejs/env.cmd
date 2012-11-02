@@ -1,0 +1,1 @@
+SET WALLET=C:\Users\yaroslav.gaponov\My Documents\GitHub\wallet\nodejs

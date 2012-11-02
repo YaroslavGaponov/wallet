@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>deamon settings</comment>
+<entry key="port">12345</entry>
+<entry key="path">C:\Users\yaroslav.gaponov\My Documents\GitHub\wallet\nodejs\data\</entry>
+<entry key="shutdown">12346</entry>
+</properties>

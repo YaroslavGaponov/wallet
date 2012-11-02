@@ -125,6 +125,8 @@ public abstract class SocketServer {
 	}
 
 	public void stop() {
+		Log.logger.info("socket server is stopping");
+		
 		Set<SelectionKey> keys = selector.selectedKeys();
 		Iterator<SelectionKey> it = keys.iterator();
 		while (it.hasNext()) {
