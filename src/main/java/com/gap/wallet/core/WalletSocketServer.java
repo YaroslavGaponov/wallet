@@ -10,9 +10,10 @@ import com.gap.wallet.net.Command;
 import com.gap.wallet.net.Frame;
 import com.gap.wallet.net.SocketServer;
 import com.gap.wallet.storage.WalletClient;
+import com.gap.wallet.deamon.Service;
 import com.gap.wallet.exception.WalletException;
 
-public class WalletSocketServer extends SocketServer {
+public class WalletSocketServer extends SocketServer implements Service {
 	
 	private final static int DEFAULT_PORT = 12345;
 	private final Map<String, WalletClient> sessions = new HashMap<String, WalletClient>();

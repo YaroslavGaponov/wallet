@@ -1,6 +1,6 @@
 {
   "name": "wallet",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Wallet - nosql database server in java and client in nodejs",
   "main": "./lib/wallet.js",
   "directories": {

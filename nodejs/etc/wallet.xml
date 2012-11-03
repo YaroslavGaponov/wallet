@@ -3,6 +3,6 @@
 <properties>
 <comment>deamon settings</comment>
 <entry key="port">12345</entry>
-<entry key="path">C:\Users\yaroslav.gaponov\My Documents\GitHub\wallet\nodejs\data\</entry>
+<entry key="path">/Users/yaroslav/projects/wallet/nodejs/data</entry>
 <entry key="shutdown">12346</entry>
 </properties>

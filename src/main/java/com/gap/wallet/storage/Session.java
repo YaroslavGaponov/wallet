@@ -14,7 +14,7 @@ class Session {
 	private final static Map<String, Integer> clients = new HashMap<String, Integer>();
 	
 	// blocking or nonblocking mode
-	private boolean blocking = false; 
+	private boolean blocking = true; 
 	 
 	// session variables
 	private final String storagefile;

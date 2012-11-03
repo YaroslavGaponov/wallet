@@ -209,7 +209,7 @@ Wallet.prototype.onerror = function(callback) {
 
 var Frame = module.exports.Frame = function(command) {
     if (! Protocol[command]) {
-	throw new Error('This command is not supported.');
+	throw new Error('This command ' + command + ' is not supported.');
     }    
     if (this instanceof Frame) {
         this.command = command;

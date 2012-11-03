@@ -2,54 +2,64 @@ package com.gap.wallet;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.util.InvalidPropertiesFormatException;
 import java.util.Properties;
 
-import com.gap.wallet.deamon.Daemon;
+import com.gap.wallet.core.WalletSocketServer;
+import com.gap.wallet.deamon.Daemonizer;
+
 
 public class Wallet {
 
-	public static void main(String[] args) throws IOException, URISyntaxException {
+	public static void main(String[] args) throws InvalidPropertiesFormatException, IOException {
 		System.out.println(Copyright.info);
-		System.out.println("wallet - demon");
-
-		String solutionPath = System.getenv("WALLET"); 
+		System.out.println("wallet - demon");	
 		
-		if (solutionPath == null) {
-			halt("Please set environment variable WALLET");
-		}
-		
-		FileInputStream fileConfig = new FileInputStream(solutionPath + "/etc/wallet.xml");
 	    Properties config = new Properties();
-	    config.loadFromXML(fileConfig);
-
+	    config.loadFromXML(new FileInputStream(System.getenv("WALLET") + "/etc/wallet.xml"));
+	    
 	    if (args.length > 0) {	    
 		    switch (args[0]) {
-		    case "run":
-		    	int port = Integer.parseInt(config.getProperty("port"));
-		    	String path = config.getProperty("path");
-		    	int shutdown =  Integer.parseInt(config.getProperty("shutdown"));
-		    	Daemon daemon = new Daemon(port, path, shutdown);
-				daemon.start();	    	
-		    case "start":
-		    	String java  = "java -jar";
-		    	String jar = solutionPath + "/bin/wallet.jar";
-		    	String command = "run";
-		    	System.out.println(String.format("%s %s %s", java, jar, command));
-		    	Runtime.getRuntime().exec(String.format("%s \"%s\" %s", java, jar, command));
-		    	break;
-		    case "stop":		    	
-		    	Daemon.stopDaemon(Integer.parseInt(config.getProperty("shutdown")));
-		    	break;
+			    case "start":
+			    	start();
+			    	break;
+			    	
+			    case "stop":		    	
+			    	stop
+			    	(
+			    		Integer.parseInt(config.getProperty("shutdown"))
+			    	);
+			    	break;
+			    	
+		    	default:
+		    		help();
 		    }
 	    }
 	    else {
-	    	halt("help: wallet [start|stop|run]");
+	    	run
+	    	(
+    			Integer.parseInt(config.getProperty("port")), 
+    			config.getProperty("path"), 
+    			Integer.parseInt(config.getProperty("shutdown"))
+	    	);
 	    }	    
 	}
 
-	private static void halt(String message) {
-		System.out.println(message);
+	private static void start() throws IOException {
+		Runtime.getRuntime().exec("java -jar " + System.getenv("WALLET") + "/bin/wallet.jar");
+	}
+
+	private static void run(int port,String path,int shutdown) throws IOException {	
+		Daemonizer.start(new WalletSocketServer(port, path), shutdown); 
+	}
+	
+	private static void stop(int shutdown) {
+		Daemonizer.stop(shutdown);
+	}
+
+	
+	private static void help() {
+		System.out.println("help: wallet [start|stop]");
 		System.exit(-1);
 	}
 		

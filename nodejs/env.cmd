@@ -1,1 +1,1 @@
-SET WALLET=C:\Users\yaroslav.gaponov\My Documents\GitHub\wallet\nodejs
+SET WALLET=/Users/yaroslav/projects/wallet/nodejs

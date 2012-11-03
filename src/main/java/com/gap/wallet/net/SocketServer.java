@@ -5,13 +5,15 @@ import java.net.*;
 import java.nio.channels.*;
 import java.util.*;
 
+import com.gap.wallet.deamon.Service;
 import com.gap.wallet.logger.Log;
 
-public abstract class SocketServer {
+public abstract class SocketServer implements Service {
 	private final static int DEFAULT_BUFFER_SIZE = 16384; // max frame size!!! 
 	private final Selector selector;
 	private final ServerSocketChannel ssc;
 	private final int buffersize;
+	private static volatile boolean running = true;
 
 	public SocketServer(int port) throws IOException {
 		this(port, DEFAULT_BUFFER_SIZE);
@@ -28,12 +30,12 @@ public abstract class SocketServer {
 		this.buffersize = buffersize;
 	}
 
-	public void start() throws IOException {
+	public void start() {
 		Log.logger.info("socket server is started");
 		
 		try {									
-			while (true) {
-				int changes = selector.select();
+			while (running) {
+				int changes = selector.select(1000);
 
 				if (changes == 0) {
 					continue;
@@ -120,12 +122,12 @@ public abstract class SocketServer {
 			}
 
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 
 	public void stop() {
 		Log.logger.info("socket server is stopping");
+		running = false;
 		
 		Set<SelectionKey> keys = selector.selectedKeys();
 		Iterator<SelectionKey> it = keys.iterator();
