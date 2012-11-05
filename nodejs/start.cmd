@@ -1,1 +1,1 @@
-java -jar ./bin/wallet.jar start
+java -jar ./bin/wallet.jar

@@ -13,7 +13,11 @@ public class Wallet {
 
 	public static void main(String[] args) throws InvalidPropertiesFormatException, IOException {
 		System.out.println(Copyright.info);
-		System.out.println("wallet - demon");	
+		System.out.println("wallet - demon");
+		
+		if (System.getenv("WALLET") == null) {
+			halt("set WALLET environment variable to solution folder");
+		}
 		
 	    Properties config = new Properties();
 	    config.loadFromXML(new FileInputStream(System.getenv("WALLET") + "/etc/wallet.xml"));
@@ -43,6 +47,11 @@ public class Wallet {
     			Integer.parseInt(config.getProperty("shutdown"))
 	    	);
 	    }	    
+	}
+
+	private static void halt(String err) {
+		System.out.println(err);
+		System.exit(-1);	
 	}
 
 	private static void start() throws IOException {

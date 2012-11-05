@@ -35,7 +35,7 @@ public abstract class SocketServer implements Service {
 		
 		try {									
 			while (running) {
-				int changes = selector.select(1000);
+				int changes = selector.selectNow();
 
 				if (changes == 0) {
 					continue;
